@@ -15,7 +15,7 @@ h3 {
 
 #container {
 	width: 95%;
-	margin: 20px auto;
+	margin: 2px auto;
 }
 
 .switch {
@@ -35,4 +35,9 @@ select#files-for-processing {
 
 #container button {
 	margin: 5px 10px 5px 0;
+}
+
+option {
+	direction: rtl;
+	font-size: small;
 }

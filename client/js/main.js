@@ -51,6 +51,9 @@ function addFiles(returnJSONobj) {
         let filePath = decodeURI(file.path);
         $listOfFiles.append(`<option value="${filePath}">${filePath}</option>`);
     });
+    if(files.length) {
+        $("#process-tiffs").attr("disabled", false);
+    }
 }
 
 function filterForValidTifs(files) {
@@ -75,5 +78,10 @@ function processTiffsToPSDs() {
         filePaths.push($(this).attr("value"));
     });
     console.log(filePaths);
-    jsx.evalScript('batchProcessTiffsToPSDs(' + JSON.stringify(transformSettings) + ',' + JSON.stringify(filePaths) + ')');
+    jsx.evalScript('batchProcessTiffsToPSDs(' + JSON.stringify(transformSettings) + ',' + JSON.stringify(filePaths) + ')', clearFiles);
+}
+
+function clearFiles() {
+    $listOfFiles.empty();
+    $("#process-tiffs").attr("disabled", true);
 }

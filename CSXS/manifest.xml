@@ -35,12 +35,12 @@
 					<Menu>Phaser</Menu>
 					<Geometry>
 						<Size>
-							<Height>400</Height>
-							<Width>400</Width>							
+							<Height>250</Height>
+							<Width>250</Width>							
 						</Size>
 						<MaxSize>
-							<Height>4000</Height>
-							<Width>4000</Width>
+							<Height>300</Height>
+							<Width>800</Width>
 						</MaxSize>
 						<MinSize>
 							<Height>200</Height>
