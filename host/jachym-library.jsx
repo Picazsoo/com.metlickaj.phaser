@@ -531,6 +531,15 @@ function JachRotateAroundPosition(_angle, x, y) {
   executeAction(charIDToTypeID('Trnf'), desc1, DialogModes.NO);
 }
 
+function rotateInDegrees(degrees) {
+  var desc1 = new ActionDescriptor();
+  var ref1 = new ActionReference();
+  ref1.putEnumerated(cTID('Dcmn'), cTID('Ordn'), cTID('Frst'));
+  desc1.putReference(cTID('null'), ref1);
+  desc1.putUnitDouble(cTID('Angl'), cTID('#Ang'), degrees);
+  executeAction(cTID('Rtte'), desc1, DialogModes.NO);
+};
+
 function JachHorizontalTransform(_hortrans,x,y) {
     var x, y, _hortrans;
     var desc1 = new ActionDescriptor();

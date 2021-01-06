@@ -1,7 +1,7 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50 */
 /*global $, window, location, CSInterface, SystemPath, themeManager*/
 
-////
+const $listOfFiles = $("#files-for-processing");
 
 //idealni stredy der
 let idealPointsCenters = {
@@ -32,7 +32,6 @@ const defaultMarquees = {
 }
 
 //Uzivatelem volene vybery pro detekci der
-let userSetMarquees = undefined;
 
 'use strict';
 jsx.file('./host/linka_a_rovnani.jsx');
@@ -45,11 +44,12 @@ const fs = require('fs');
 function addFiles(returnJSONobj) {
     //console.log(returnJSONobj);
     let files = JSON.parse(returnJSONobj);
-    $("#files-for-processing").empty();
+    $listOfFiles.empty();
     files = filterForValidTifs(files);
     files.sort();
     files.forEach(file => {
-        $("#files-for-processing").append(`<option value="${file.path}">${file.path}</option>`);
+        let filePath = decodeURI(file.path);
+        $listOfFiles.append(`<option value="${filePath}">${filePath}</option>`);
     });
 }
 
@@ -60,4 +60,20 @@ function filterForValidTifs(files) {
         console.log(fileNameUpperCase + " : " + fileNameUpperCase.indexOf(".TIF"));
         return fileNameUpperCase.indexOf(".TIF") != -1
     });
+}
+
+function processTiffsToPSDs() {
+    let marquees = defaultMarquees;
+    let transformSettings = {
+        "marquees": marquees,
+        "idealPointsCenters": idealPointsCenters
+    }
+
+    let filePaths = [];
+    $listOfFiles.find("option").each( function() {
+        //extract filepath from each option element
+        filePaths.push($(this).attr("value"));
+    });
+    console.log(filePaths);
+    jsx.evalScript('batchProcessTiffsToPSDs(' + JSON.stringify(transformSettings) + ',' + JSON.stringify(filePaths) + ')');
 }

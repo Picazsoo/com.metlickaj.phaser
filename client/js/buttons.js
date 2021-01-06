@@ -23,13 +23,7 @@ $("#restartExt").on("click", function() {
 $("#load-files-bridge").on("click" , () => jsx.evalScript("loadFiles('bridge')", addFiles));
 $("#load-files-explorer").on("click" , () => jsx.evalScript("loadFiles('explorer')", addFiles));
 $("#clear-cache").on("click", () => clearCache());
-$("#restore-thumbnails").on("click", () => {});
-
-function getPSDFilePathFromEvent(event) {
-    $activeSlide = $(event.target).closest("li");
-    console.log($activeSlide);
-    return $activeSlide.attr("folder") + "/" + $activeSlide.attr("fileName");
-}
+$("#process-tiffs").on("click", () => processTiffsToPSDs());
 
 $(window).on("ready", function(){
     $("[rel='tooltip']").tooltip();

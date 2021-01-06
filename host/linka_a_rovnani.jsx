@@ -1,42 +1,7 @@
 ﻿//@include "./jachym-library.jsx"
 //@include "./json.jsx"
 
-var currentFolder;
-var folderNotSet = "není vybraná složka";
-var Soubory_Sh = new Array;
-var Soubory_HP = new Array;
-var folderFile;
 var transformSettings;
-
-function filterpsd(inputList) {
-    var inputList_nonfiltered = new Array;
-    inputList_nonfiltered = inputList;
-    var inputList_filtered = new Array;
-    var length = inputList_nonfiltered.length;
-
-    for (i = 0; i < length; i++) {
-        var filePathLength = inputList_nonfiltered[i].toString().length;
-        if (inputList_nonfiltered[i].toString().substring(filePathLength - 4, filePathLength).search("tiff") != -1 || inputList_nonfiltered[i].toString().substring(filePathLength - 4, filePathLength).search("TIFF") != -1) {
-            inputList_filtered[inputList_filtered.length] = inputList_nonfiltered[i];
-        }
-    }
-    return inputList_filtered;
-}
-
-function Depath(inputList) {
-    var inputList_nonfiltered = new Array;
-    inputList_nonfiltered = inputList;
-
-    var inputList_filtered = new Array;
-    var length = inputList_nonfiltered.length;
-    var tempFile;
-
-    for (i = 0; i < length; i++) {
-        tempFile = inputList_nonfiltered[i].toString();
-        inputList_filtered[i] = tempFile.substring(tempFile.lastIndexOf("/", ) + 1, tempFile.length);
-    }
-    return inputList_filtered;
-}
 
 function loadFiles(source) {
     var files = [];
@@ -56,61 +21,54 @@ function loadFiles(source) {
     return JSON.lave(filesWithPaths);
 }
 
-function processPSD() {
+function batchProcessTiffsToPSDs(transformSettings, filePaths) {
     if (CheckIfAnyPalleteIsVisible() == true) {
         app.togglePalettes();
     }
-    var length = Soubory_Sh.length;
-    statictext_CurrentFolder.text = "Zpracovano 0 fazi z " + length;
-    for (i = 0; i < length; i++) {
-        var docRef = open(File(currentFolder.toString() + Soubory_Sh[i].toString()));
-        var docRefPath = app.activeDocument.fullName;
-        var docRefPathPSD;
-        var progressTexticek
-        ProcessTIFsToStraightenedPSDs();
-        docRefPathPSD = docRefPath.toString().replace(".tiff", ".psd");
-        docRef.saveAs(new File(docRefPathPSD), PhotoshopSaveOptions);
+    var saveOptions = new PhotoshopSaveOptions;
+    saveOptions.alphaChannels = true;
+    saveOptions.annotations = true;
+    saveOptions.embedColorProfile = true;
+    saveOptions.layers = true;
+    saveOptions.spotColors = true;
+
+    var numOfFiles = filePaths.length;
+    for (i = 0; i < numOfFiles; i++) {
+        var docRef = open(File(filePaths[i]));
+        var docRefPath = app.activeDocument.fullName.toString();
+        ProcessTIFsToStraightenedPSDs(transformSettings);
+        var docRefPathPSD = docRefPath.substring(0, docRefPath.lastIndexOf(".")) + ".psd";
+        docRef.saveAs(new File(docRefPathPSD), saveOptions);
         docRef.close(SaveOptions.DONOTSAVECHANGES);
-        progressTexticek = "zpracovano " + (i + 1) + " fazi z " + length;
-        statictext_CurrentFolder.text = progressTexticek;
     }
     app.togglePalettes();
 }
 
+function ProcessTIFsToStraightenedPSDs(transformSettings) {
 
-
-function ProcessTIFsToStraightenedPSDs() {
-
+    var idealPointsCenters = transformSettings.idealPointsCenters;
+    var marquees = transformSettings.marquees;
 
     //Promenne - idealni stredy der a realne stredy der:
-    var deltaX, deltaY, angle, posunX, posunY, scannedPrepona, percentScale;
-    var idealLeftPoint = {
-        x: 759.5,
-        y: 136
-    };
-    var idealRightPoint = {
-        x: 3159,
-        y: 136
-    };
+    var idealPoints = {
+        left: idealPointsCenters.left,
+        right: idealPointsCenters.right
+    }
+    var idealLeftPoint = idealPointsCenters.left;
+    var idealRightPoint = idealPointsCenters.right;
 
     var scannedLeftPoint = {};
     var scannedRightPoint = {};
 
-    var leftMarquee = {
-        left: 600,
-        top: 40,
-        right: 1000,
-        bottom: 209
-    };
-    var rightMarquee = {
-        left: 3000,
-        top: 40,
-        right: 3350,
-        bottom: 209
-    };
+    var leftMarquee = marquees.left;
+    var rightMarquee = marquees.right;
 
     //==================== VOJTA - LINKA 2018 - oba rozmery (07.03.2019) ==============
 
+    //rotate if is in portrait mode
+    if(app.activeDocument.width.as("px") < app.activeDocument.height.as("px")) {
+        rotateInDegrees(90);
+    }
     SetCanvasSize(2480); // Canvas Size
     ResetSwatches();
     SwitchSwatch();
@@ -184,9 +142,9 @@ function ProcessTIFsToStraightenedPSDs() {
     SelectLayer("BARVA"); // Select
 
     //rovnani!
-    RulerHorizontal(idealLeftPoint.y); //přídá pravítko
-    JachRulerVrtc(idealLeftPoint.x); //přídá pravítko
-    JachRulerVrtc(idealRightPoint.x); //přídá pravítko
+    RulerHorizontal(idealPoints.left.y); //přídá pravítko
+    JachRulerVrtc(idealPoints.left.x); //přídá pravítko
+    JachRulerVrtc(idealPoints.right.x); //přídá pravítko
     SelectLayer("diry"); //Výběr děr
     SquareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom); // Marquee na levou díru
     JachDiraColorRange(); // Marquee výběr kontury díry
@@ -194,8 +152,12 @@ function ProcessTIFsToStraightenedPSDs() {
     //Zde se může odehrát kontrola správnosti výběru díry
 
     // VÝPOČET STŘEDU LEVÉ DÍRY
-    scannedLeftPoint.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
-    scannedLeftPoint.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
+    var scannedPoints = {
+        left: {},
+        right: {}
+    };
+    scannedPoints.left.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
+    scannedPoints.left.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
 
     ExpandMarquee(4, false)
     StrokeAroundSelection(4);
@@ -205,8 +167,8 @@ function ProcessTIFsToStraightenedPSDs() {
     JachDiraColorRange(); // Marquee výběr kontury díry
 
     // VÝPOČET STŘEDU PRAVÉ DÍRY
-    scannedRightPoint.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
-    scannedRightPoint.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
+    scannedPoints.right.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
+    scannedPoints.right.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
 
     ExpandMarquee(4, false)
     StrokeAroundSelection(4);
@@ -217,23 +179,23 @@ function ProcessTIFsToStraightenedPSDs() {
     SelectLayer("VRSTVY");
 
 
-    deltaX = scannedRightPoint.x - scannedLeftPoint.x; //Výpočet obdélníku tvořeného dírami
-    deltaY = scannedRightPoint.y - scannedLeftPoint.y;
-    scannedPrepona = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
-    angle = -1 * Math.atan(deltaY / deltaX) * 180 / Math.PI; //Výpočet úhlu pro narovnání skew
-    JachRotateAroundPosition(angle, scannedLeftPoint.x, scannedLeftPoint.y); //Otočení pro narovnání
+    var deltaX = scannedPoints.right.x - scannedPoints.left.x; //Výpočet obdélníku tvořeného dírami
+    var deltaY = scannedPoints.right.y - scannedPoints.left.y;
+    var scannedPrepona = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
+    var angle = -1 * Math.atan(deltaY / deltaX) * 180 / Math.PI; //Výpočet úhlu pro narovnání skew
+    JachRotateAroundPosition(angle, scannedPoints.left.x, scannedPoints.left.y); //Otočení pro narovnání
 
     //spocitam o kolik posunout pro napozicovani na idealni levy malybod
-    posunX = idealLeftPoint.x - scannedLeftPoint.x;
-    posunY = idealLeftPoint.y - scannedLeftPoint.y;
+    var posunX = idealPoints.left.x - scannedPoints.left.x;
+    var posunY = idealPoints.left.y - scannedPoints.left.y;
     JachMove(posunX, posunY);
 
     //Spocitam novou polohu naskenovaneho praveho bodu po rotaci a posunu
-    scannedRightPoint.x = scannedRightPoint.x + (scannedPrepona - deltaX) + posunX;
+    scannedPoints.right.x = scannedPoints.right.x + (scannedPrepona - deltaX) + posunX;
 
     //spocitam o kolik roztahnout obraz (se stredem roztazeni na malem bode)
-    percentScale = (idealRightPoint.x - idealLeftPoint.x) / (scannedRightPoint.x - idealLeftPoint.x) * 100;
-    JachHorizontalTransform(percentScale, idealLeftPoint.x, idealLeftPoint.y);
+    var percentScale = (idealPoints.right.x - idealPoints.left.x) / (scannedPoints.right.x - idealPoints.left.x) * 100;
+    JachHorizontalTransform(percentScale, idealPoints.left.x, idealPoints.left.y);
 
     SelectLayer("diry");
     ModifyLayersLock(true);
@@ -249,7 +211,7 @@ function ProcessTIFsToStraightenedPSDs() {
     app.activeDocument.info.author = "Zpracovano";
 
     transformSettings = "";
-    transformSettings = angle + "\r" + scannedLeftPoint.x + "\r" + scannedLeftPoint.y + "\r" + posunX + "\r" + posunY + "\r" + percentScale + "\r" + idealLeftPoint.x + "\r" + idealLeftPoint.y
+    transformSettings = angle + "\r" + scannedPoints.left.x + "\r" + scannedPoints.left.y + "\r" + posunX + "\r" + posunY + "\r" + percentScale + "\r" + idealPoints.left.x + "\r" + idealPoints.left.y
     app.activeDocument.info.keywords = [transformSettings];
 
 }
