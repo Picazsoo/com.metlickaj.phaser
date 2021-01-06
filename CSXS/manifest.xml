@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.metlickaj.phaser" ExtensionBundleVersion="1.0.0"
+		ExtensionBundleName="Phaser" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<ExtensionList>
+		<Extension Id="com.metlickaj.phaser" Version="1.0" />
+	</ExtensionList>
+	<ExecutionEnvironment>
+		<HostList>
+            <Host Name="PHXS" Version="14" /><Host Name="PHSP" Version="14" />
+		</HostList>
+		<LocaleList>
+			<Locale Code="All" />
+		</LocaleList>
+		<RequiredRuntimeList>
+			<RequiredRuntime Name="CSXS" Version="7.0" />
+		</RequiredRuntimeList>
+	</ExecutionEnvironment>
+	<DispatchInfoList>
+		<Extension Id="com.metlickaj.phaser">;
+			<DispatchInfo >
+				<Resources>
+				<MainPath>./client/index.html</MainPath>
+				<!--ScriptPath>./host/hostscript.jsx</ScriptPath-->
+					<CEFCommandLine>
+						<Parameter>--enable-nodejs</Parameter>
+						<Parameter>--mixed-context</Parameter>
+					</CEFCommandLine>
+				</Resources>
+				<Lifecycle>
+					<AutoVisible>true</AutoVisible>
+				</Lifecycle>
+				<UI>
+					<Type>Panel</Type>
+					<Menu>Phaser</Menu>
+					<Geometry>
+						<Size>
+							<Height>400</Height>
+							<Width>400</Width>							
+						</Size>
+						<MaxSize>
+							<Height>4000</Height>
+							<Width>4000</Width>
+						</MaxSize>
+						<MinSize>
+							<Height>200</Height>
+							<Width>200</Width>
+						</MinSize>						
+					</Geometry>
+				</UI>
+			</DispatchInfo>
+		</Extension>
+	</DispatchInfoList>
+</ExtensionManifest>

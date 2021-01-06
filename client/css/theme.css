@@ -1,0 +1,38 @@
+/*
+This stylesheet represents CC app styles
+Empty classes will be edited at runtime with dynamic app values
+*/
+
+h3 {
+	font-weight: 200;
+}
+
+.switch-label {
+	margin-right:20px; 
+	font-weight:100; 
+	font-size:14px;
+}
+
+#container {
+	width: 95%;
+	margin: 20px auto;
+}
+
+.switch {
+	margin: 10px;
+}
+
+#link-to-working-folder {
+    color: white;
+}
+
+select#files-for-processing {
+    background: #434343;
+    color: #d8d8d8;
+	padding: 5px;
+	width: 100%;
+}
+
+#container button {
+	margin: 5px 10px 5px 0;
+}

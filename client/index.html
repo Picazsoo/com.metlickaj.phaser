@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <link id="awesomeFont" rel="stylesheet" href="css/all.css" />
+  <link id="bootstrap-css" rel="stylesheet" href="css/bootstrap.css" />
+  <link id="hostStyle" rel="stylesheet" href="css/theme.css" />
+  <link id="theme" rel="stylesheet" href="css/light.css" />
+  <title></title>
+</head>
+
+<body>
+
+  <div id="container">
+    <select id="files-for-processing" multiple size="10"></select>
+    <hr>
+    <button id="load-files-bridge" class="topcoat-button" rel='tooltip' title="Načte soubory označené v Adobe Bridge">Načíst z Bridge</button>
+    <button id="load-files-explorer" class="topcoat-button" rel='tooltip' title="Otevře Průzkumník pro výběr souborů">Načíst z Průzkumníku</button>
+    <button id="zpracovat" class="topcoat-button">Zpracovat fáze do .psd</button>
+    <hr>
+    <button id="restartExt" class="topcoat-button">Restart</button>
+    <button id="clear-cache" class="topcoat-button">Clear cache</button>
+  </div>
+
+  <script src="js/libs/CSInterface-4.0.0.js"></script>
+  <script src="js/libs/jquery-2.0.2.min.js"></script>
+  <script src="js/libs/bootstrap.js"></script>
+  <script type="text/javascript" src="js/libs/JSX.js"></script>
+  <script src="js/themeManager.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/buttons.js"></script>
+</body>
+
+</html>
