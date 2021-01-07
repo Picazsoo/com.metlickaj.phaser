@@ -540,6 +540,33 @@ function rotateInDegrees(degrees) {
   executeAction(cTID('Rtte'), desc1, DialogModes.NO);
 };
 
+//Creates layer comp that allows to quicky toggle between layer arrangements
+function createLayerComp(compName, comment) {
+  var desc1 = new ActionDescriptor();
+  var ref1 = new ActionReference();
+  ref1.putClass(sTID("compsClass"));
+  desc1.putReference(cTID('null'), ref1);
+  var desc2 = new ActionDescriptor();
+  desc2.putBoolean(sTID("useVisibility"), true);
+  desc2.putBoolean(sTID("usePosition"), true);
+  desc2.putBoolean(sTID("useAppearance"), true);
+  desc2.putBoolean(sTID("useChildLayerCompState"), false);
+  desc2.putString(cTID('Ttl '), compName);
+  desc2.putString(sTID("comment"), comment);
+  desc1.putObject(cTID('Usng'), sTID("compsClass"), desc2);
+  executeAction(cTID('Mk  '), desc1, DialogModes.NO);
+};
+
+function applyLayerComp(compName) {
+    var layerComp = app.activeDocument.layerComps.getByName(compName);
+    alert("test of layer" + layerComp);
+    if(layerComp) {
+      layerComp.apply();
+    } else {
+      alert("this layer des not exist");
+    }
+  };
+
 function JachHorizontalTransform(_hortrans,x,y) {
     var x, y, _hortrans;
     var desc1 = new ActionDescriptor();
@@ -925,4 +952,4 @@ function GetFilesFromBridge() {
 		fileList = new Array();
 	}
 	return fileList; 
-}
+};
