@@ -220,6 +220,7 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     setVisibilityByLayerName(true, "LINKA");      // Hide
     SelectLayer("BARVA");      // Select
     createLayerComp("pavel-upravy", "pro bezne dodelavky");      // Make
+
     SelectLayer("eSVETLO");      // Select
     OpacityToPercent(80);      // Set
     setColorOverlay(0, 0, 255, 100);      // Set
@@ -229,6 +230,13 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     setVisibilityByLayerName(false, "LINKA-barva");      // Hide
     setVisibilityByLayerName(false, "BARVA");      // Hide
     createLayerComp("pavel-stinovani", "pro shadower");      // Make
+
+    setVisibilityByLayerName(false, "eSVETLO");
+    setVisibilityByLayerName(false, "eSTIN");
+    createLayerComp("stinovana-faze", "aktualne stinovana faze");      // Make
+
+    setVisibilityByLayerName(true, "eSVETLO");
+    setVisibilityByLayerName(true, "eSTIN");
     setVisibilityByLayerName(true, "LINKA-barva")      // Show
     setVisibilityByLayerName(true, "BARVA")      // Show
     SelectLayer("eSVETLO");      // Select
