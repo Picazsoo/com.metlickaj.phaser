@@ -32,7 +32,7 @@
 				</Lifecycle>
 				<UI>
 					<Type>Panel</Type>
-					<Menu>Phaser</Menu>
+					<Menu>Phaser 0.2</Menu>
 					<Geometry>
 						<Size>
 							<Height>250</Height>
