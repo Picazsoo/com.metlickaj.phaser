@@ -81,6 +81,16 @@ function processTiffsToPSDs() {
     jsx.evalScript('batchProcessTiffsToPSDs(' + JSON.stringify(transformSettings) + ',' + JSON.stringify(filePaths) + ')', clearFiles);
 }
 
+
+function fixWellDefinedHoles() {
+    let marquees = defaultMarquees;
+    let transformSettings = {
+        "marquees": marquees,
+        "idealPointsCenters": idealPointsCenters
+    }
+    jsx.evalScript('fixWellDefinedHoles(' + JSON.stringify(transformSettings) + ')');
+}
+
 function clearFiles() {
     $listOfFiles.empty();
     $("#process-tiffs").attr("disabled", true);

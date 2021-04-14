@@ -508,6 +508,24 @@ function colorRangeBarvaTank() {
     executeAction(sTID('colorRange'), desc1, DialogModes.NO);
 };
 
+//color range oprava der - ruzova
+function colorRangePinkHoles() {
+    var desc1 = new ActionDescriptor();
+    desc1.putInteger(cTID('Fzns'), 39);
+    var desc2 = new ActionDescriptor();
+    desc2.putDouble(cTID('Lmnc'), 58.47);
+    desc2.putDouble(cTID('A   '), 87.95);
+    desc2.putDouble(cTID('B   '), -36.21);
+    desc1.putObject(cTID('Mnm '), cTID('LbCl'), desc2);
+    var desc3 = new ActionDescriptor();
+    desc3.putDouble(cTID('Lmnc'), 58.47);
+    desc3.putDouble(cTID('A   '), 87.95);
+    desc3.putDouble(cTID('B   '), -36.21);
+    desc1.putObject(cTID('Mxm '), cTID('LbCl'), desc3);
+    desc1.putInteger(sTID("colorModel"), 0);
+    executeAction(sTID('colorRange'), desc1, DialogModes.NO);
+  };
+
 // Zkopiruj vrstvu (kdyz selection, tak jen vybranou cast)
 function JachCopyToLayer() {
     executeAction(sTID('copyToLayer'), undefined, DialogModes.NO);
@@ -961,7 +979,90 @@ function InvertMarchingAnts() {
     executeAction(cTID('Invs'), undefined, DialogModes.NO);
 };
 
+//aplikuje layer comp na smart object podle jména. když nenajde, tak neudělá nic.
+function setSmartObjLayerCompByName(name) {
 
+    var theCompsList = [];
+    var ref = new ActionReference();
+    ref.putEnumerated(charIDToTypeID("Lyr "), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"));
+    var layerDesc = executeActionGet(ref);
+    if (layerDesc.hasKey(stringIDToTypeID("smartObject")) == true) {
+        var smartObject = layerDesc.getObjectValue(stringIDToTypeID("smartObject"));
+        theCompsList = smartObject.getObjectValue(stringIDToTypeID("compsList"));
+        if (theCompsList.count > 2) {
+            theCompsList = theCompsList.getList(stringIDToTypeID("compList"));
+            var theSOComps = {};
+            for (var m = 0; m < theCompsList.count; m++) {
+                var current = theCompsList.getObjectValue(m);
+                var theName = current.getString(stringIDToTypeID("name"));
+                var theID = current.getInteger(stringIDToTypeID("ID"));
+                var theComment = current.getString(stringIDToTypeID("comment"));
+                theSOComps[theName] = theID;
+            };
+        };
+        //its a little dirty to use the name as object attr key - but it works for now.
+        if (theSOComps[name]) {
+            setSmartObjLayerCompById(theSOComps[name]);
+        }
+        return;
+    };
+}
+
+function replaceSmartObjContents(filePath) {
+    alert("see selected layer");
+    alert("replacing with " + filePath);
+    var desc1 = new ActionDescriptor();
+    desc1.putPath(cTID('null'), new File(filePath));
+    executeAction(sTID('placedLayerReplaceContents'), desc1, DialogModes.NO);
+};
+
+function getNameOfLayerStartingWith(startOfString) {
+    var layers = app.activeDocument.layers;
+    var numOfLayers = layers.length;
+    for (var i = 0; i < numOfLayers; i++) {
+        var name = layers[i].name;
+        if (name.indexOf(startOfString) != -1) {
+            return name
+        }
+    }
+    return undefined;
+};
+
+//selects layer starting with the string and returns true if it manages to select it.
+function selectLayerStartingWith(startOfString) {
+    //alert("trying to select layer " + startOfString);
+    var layerName = getNameOfLayerStartingWith(startOfString);
+    if (layerName) {
+        //alert("found layer name " + layerName);
+        SelectLayer(layerName);
+        return true;
+    }
+    //alert("no layer starting with " + startOfString + " found");
+    return false;
+};
+
+function setSmartObjLayerCompById(layerCompId) {
+    var desc1 = new ActionDescriptor();
+    var ref1 = new ActionReference();
+    ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
+    desc1.putReference(cTID('null'), ref1);
+    desc1.putInteger(sTID("compID"), layerCompId);
+    executeAction(sTID('setPlacedLayerComp'), desc1, DialogModes.NO);
+};
+
+//Clears history for document
+function clearhistoryForCurrDocumentNondestructive() {
+    var desc1 = new ActionDescriptor();
+    var ref1 = new ActionReference();
+    ref1.putProperty(cTID('Prpr'), cTID('HsSt'));
+    ref1.putEnumerated(cTID('Dcmn'), cTID('Ordn'), cTID('Trgt'));
+    desc1.putReference(cTID('null'), ref1);
+    executeAction(cTID('Cler'), desc1, DialogModes.NO);
+};
+
+function purgeAllHistory() {
+    app.purge(PurgeTarget.HISTORYCACHES);
+}
 
 function CheckIfAnyPalleteIsVisible() {
     var isVisible = false;
@@ -1009,4 +1110,32 @@ function GetFilesFromBridge() {
         fileList = new Array();
     }
     return fileList;
-};
+}
+
+
+
+// if (app.documents.length > 0) {
+//     var ref = new ActionReference();
+//     ref.putEnumerated(charIDToTypeID("Lyr "), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"));
+//     var layerDesc = executeActionGet(ref);
+//     if (layerDesc.hasKey(stringIDToTypeID("smartObject")) == true) {
+//         var theSO = layerDesc.getObjectValue(stringIDToTypeID("smartObject"));
+//         var x = theSO.getList(stringIDToTypeID("compsList"));
+//         var theCompsList = theSO.getObjectValue(stringIDToTypeID("compsList"));
+//         if (theCompsList.count > 2) {
+//             var theCompsList = theCompsList.getList(stringIDToTypeID("compList"));
+//             var theSOComps = new Array;
+//             for (var m = 0; m < theCompsList.count; m++) {
+//                 var thisOne = theCompsList.getObjectValue(m);
+//                 var theName = thisOne.getString(stringIDToTypeID("name"));
+//                 var theID = thisOne.getInteger(stringIDToTypeID("ID"));
+//                 var theComment = thisOne.getString(stringIDToTypeID("comment"));
+//                 theSOComps.push([theName, theID, theComment])
+//             };
+//             var theSOMore = layerDesc.getObjectValue(stringIDToTypeID("smartObjectMore"));
+//             var appliedComp = theSOMore.getInteger(stringIDToTypeID("comp"));
+//             alert("the comps\n" + theSOComps.join("\n"));
+//             alert(appliedComp);
+//         };
+//     };
+// };

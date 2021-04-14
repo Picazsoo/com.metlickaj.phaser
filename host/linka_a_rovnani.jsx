@@ -44,6 +44,90 @@ function batchProcessTiffsToPSDs(transformSettings, filePaths) {
     app.togglePalettes();
 }
 
+function fixWellDefinedHoles(transformSettings) {
+    if (CheckIfAnyPalleteIsVisible() == true) {
+        app.togglePalettes();
+    }
+    var saveOptions = new PhotoshopSaveOptions;
+    saveOptions.alphaChannels = true;
+    saveOptions.annotations = true;
+    saveOptions.embedColorProfile = true;
+    saveOptions.layers = true;
+    saveOptions.spotColors = true;
+    var docRef = app.activeDocument;
+    fixBadHoles(transformSettings);
+    //docRef.close(SaveOptions.SAVECHANGES);
+    app.togglePalettes();
+}
+
+function fixBadHoles(transformSettings) {
+
+    var idealPointsCenters = transformSettings.idealPointsCenters;
+    var marquees = transformSettings.marquees;
+
+    //Promenne - idealni stredy der a realne stredy der:
+    var idealPoints = {
+        left: idealPointsCenters.left,
+        right: idealPointsCenters.right
+    }
+    
+    var leftMarquee = {};
+    var rightMarquee = {};
+    leftMarquee.top = 0;
+    leftMarquee.left = 0;
+    leftMarquee.right = Math.floor(app.activeDocument.width/2);
+    leftMarquee.bottom = 370;
+
+    rightMarquee.top = 0;
+    rightMarquee.left = Math.floor(app.activeDocument.width/2);
+    rightMarquee.right = app.activeDocument.width;
+    rightMarquee.bottom = 370;
+
+    SelectLayer("diry");
+    SquareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom);
+    colorRangePinkHoles();
+
+    var scannedPoints = {
+        left: {},
+        right: {}
+    };
+    // VÝPOČET STŘEDU LEVÉ DÍRY
+    scannedPoints.left.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
+    scannedPoints.left.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
+    JachNoMarchingAnts(); //Zrušení marquee
+
+    SquareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom);
+    colorRangePinkHoles();
+    // VÝPOČET STŘEDU PRAVÉ DÍRY
+    scannedPoints.right.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
+    scannedPoints.right.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
+
+
+    
+    SelectLayer("eSVETLO"); // Select
+    SelectLayerContinuous("BILA");
+    ModifyLayersLock(false);
+
+    var deltaX = scannedPoints.right.x - scannedPoints.left.x; //Výpočet obdélníku tvořeného dírami
+    var deltaY = scannedPoints.right.y - scannedPoints.left.y;
+    var scannedPrepona = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
+    var angle = -1 * Math.atan(deltaY / deltaX) * 180 / Math.PI; //Výpočet úhlu pro narovnání skew
+    JachRotateAroundPosition(angle, scannedPoints.left.x, scannedPoints.left.y); //Otočení pro narovnání
+
+    //spocitam o kolik posunout pro napozicovani na idealni levy malybod
+    var posunX = idealPoints.left.x - scannedPoints.left.x;
+    var posunY = idealPoints.left.y - scannedPoints.left.y;
+    JachMove(posunX, posunY);
+
+    //Spocitam novou polohu naskenovaneho praveho bodu po rotaci a posunu
+    scannedPoints.right.x = scannedPoints.right.x + (scannedPrepona - deltaX) + posunX;
+
+    //spocitam o kolik roztahnout obraz (se stredem roztazeni na malem bode)
+    var percentScale = (idealPoints.right.x - idealPoints.left.x) / (scannedPoints.right.x - idealPoints.left.x) * 100;
+    JachHorizontalTransform(percentScale, idealPoints.left.x, idealPoints.left.y);
+
+}
+
 function ProcessTIFsToStraightenedPSDs(transformSettings) {
 
     var idealPointsCenters = transformSettings.idealPointsCenters;
@@ -54,11 +138,6 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
         left: idealPointsCenters.left,
         right: idealPointsCenters.right
     }
-    var idealLeftPoint = idealPointsCenters.left;
-    var idealRightPoint = idealPointsCenters.right;
-
-    var scannedLeftPoint = {};
-    var scannedRightPoint = {};
 
     var leftMarquee = marquees.left;
     var rightMarquee = marquees.right;
@@ -161,6 +240,7 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
 
     ExpandMarquee(4, false)
     StrokeAroundSelection(4);
+    //todo: Mel bych tady vybrat ostre tu ruzovou barvu a z ni delat stred - ted ho delam moc brzo
 
     JachNoMarchingAnts(); //Zrušení marquee
     SquareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom); //Marquee na pravou díru
