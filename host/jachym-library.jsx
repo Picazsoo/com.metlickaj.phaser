@@ -1,4 +1,6 @@
-﻿function cTID(s) {
+﻿//@include "./polyfill/array_foreach_polyfill.jsx"
+
+function cTID(s) {
     return app.charIDToTypeID(s);
 };
 
@@ -151,11 +153,11 @@ function setCanvasSize(Height) {
 // Layer Via Copy
 function copyLayer(sourceLayer, targetLayerName) {
     if(sourceLayer != undefined || sourceLayer != null) {
-        selectLayer(sourceLayer);
+        selectLayers(sourceLayer);
     }
     executeAction(sTID('copyToLayer'), undefined, DialogModes.NO);
     if(targetLayerName != undefined || sourceLayer != null) {
-        renameLayer(targetLayerName);
+        renameLayer(null ,targetLayerName);
     }
 };
 
@@ -190,7 +192,7 @@ function newLayer(layerName) {
     desc1.putReference(cTID('null'), ref1);
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
     if(layerName != undefined) {
-        renameLayer(layerName);
+        renameLayer(null, layerName);
     }
 };
 
@@ -217,11 +219,37 @@ function fillColor() {
 };
 
 // Select
-function selectLayer(layerName) {
+function selectLayers(layerNames) {
+    if(layerNames instanceof Array) {
+        layerNames.forEach(function(layerNameInArray, layerIndex) {
+            var desc1 = new ActionDescriptor();
+            var ref1 = new ActionReference();
+            ref1.putName(cTID('Lyr '), layerNameInArray);
+            desc1.putReference(cTID('null'), ref1);
+            if(layerIndex > 0) {
+                desc1.putEnumerated(sTID("selectionModifier"), sTID("selectionModifierType"), sTID("addToSelection"));
+            }
+            desc1.putBoolean(cTID('MkVs'), false);
+            executeAction(cTID('slct'), desc1, DialogModes.NO);
+        });
+    } else {
+        var desc1 = new ActionDescriptor();
+        var ref1 = new ActionReference();
+        ref1.putName(cTID('Lyr '), layerNames);
+        desc1.putReference(cTID('null'), ref1);
+        desc1.putBoolean(cTID('MkVs'), false);
+        executeAction(cTID('slct'), desc1, DialogModes.NO);
+    }
+};
+
+// Select
+function selectLayersFromTo(fromLayerName, toLayerName) {
+    selectLayers(fromLayerName);
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
-    ref1.putName(cTID('Lyr '), layerName);
+    ref1.putName(cTID('Lyr '), toLayerName);
     desc1.putReference(cTID('null'), ref1);
+    desc1.putEnumerated(sTID("selectionModifier"), sTID("selectionModifierType"), sTID("addToSelectionContinuous"));
     desc1.putBoolean(cTID('MkVs'), false);
     executeAction(cTID('slct'), desc1, DialogModes.NO);
 };
@@ -237,17 +265,6 @@ function makeMask() {
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
 };
 
-// Select
-function selectLayerContinuous(layerName) {
-    var desc1 = new ActionDescriptor();
-    var ref1 = new ActionReference();
-    ref1.putName(cTID('Lyr '), layerName);
-    desc1.putReference(cTID('null'), ref1);
-    desc1.putEnumerated(sTID("selectionModifier"), sTID("selectionModifierType"), sTID("addToSelectionContinuous"));
-    desc1.putBoolean(cTID('MkVs'), false);
-    executeAction(cTID('slct'), desc1, DialogModes.NO);
-};
-
 // Merge Layers
 function mergeSelectedLayers() {
     var desc1 = new ActionDescriptor();
@@ -255,19 +272,22 @@ function mergeSelectedLayers() {
 };
 
 // Delete
-function deletePixels() {
+function deleteSelectedPixels() {
     executeAction(cTID('Dlt '), undefined, DialogModes.NO);
 };
 
 // Prejmenuj vrstvu
-function renameLayer(jmenoVrstvy) {
-    var jmenoVrstvy;
+function renameLayer(layerToRename, newLayerName) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
-    ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
+    if(layerToRename != undefined || layerToRename != null) {
+        ref1.putName(cTID('Lyr '), layerToRename);
+    } else {
+        ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
+    }
     desc1.putReference(cTID('null'), ref1);
     var desc2 = new ActionDescriptor();
-    desc2.putString(cTID('Nm  '), jmenoVrstvy);
+    desc2.putString(cTID('Nm  '), newLayerName);
     desc1.putObject(cTID('T   '), cTID('Lyr '), desc2);
     executeAction(cTID('setd'), desc1, DialogModes.NO);
 };
@@ -357,6 +377,17 @@ function ShowLayer(trueorfalse) {
     }
     if (trueorfalse == false) {
         executeAction(cTID('Hd  '), desc1, DialogModes.NO);
+    }
+};
+
+// Hide
+function setVisibilityByLayersName(setVisible, layerNames) {
+    if(layerNames instanceof Array) {
+        layerNames.forEach(function(layerName) {
+            setVisibilityByLayerName(setVisible, layerName);
+        });
+    } else {      
+        setVisibilityByLayerName(setVisible, layerNames);
     }
 };
 
@@ -544,7 +575,7 @@ function DeleteLayer() {
 };
 
 // Set marque by transparency
-function MarchingAntsByTransparency() {
+function setMarqueByTransparency() {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putProperty(cTID('Chnl'), sTID("selection"));
@@ -556,7 +587,7 @@ function MarchingAntsByTransparency() {
 };
 
 // Deselect marque
-function JachNoMarchingAnts() {
+function deselectMarque() {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putProperty(cTID('Chnl'), sTID("selection"));
@@ -616,7 +647,7 @@ function applyLayerComp(compName) {
     }
 };
 
-function JachHorizontalTransform(_hortrans, x, y) {
+function jachHorizontalTransform(_hortrans, x, y) {
     var x, y, _hortrans;
     var desc1 = new ActionDescriptor();
     var desc2 = new ActionDescriptor();
@@ -673,33 +704,33 @@ function CreateGuides(guidesTXT) { //   "~/Desktop/temp_stinovac-guides.txt"
     }
 }
 
-function JachMove(x, y) {
-    var x, y;
+function moveLayerPixels(xPixels, yPixels) {
+    var xPixels, yPixels;
     var desc1 = new ActionDescriptor();
     var desc2 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putEnumerated(charIDToTypeID('Lyr '), charIDToTypeID('Ordn'), charIDToTypeID('Trgt'));
     desc1.putReference(charIDToTypeID('null'), ref1);
-    desc2.putUnitDouble(charIDToTypeID('Hrzn'), charIDToTypeID('#Pxl'), x);
-    desc2.putUnitDouble(charIDToTypeID('Vrtc'), charIDToTypeID('#Pxl'), y);
+    desc2.putUnitDouble(charIDToTypeID('Hrzn'), charIDToTypeID('#Pxl'), xPixels);
+    desc2.putUnitDouble(charIDToTypeID('Vrtc'), charIDToTypeID('#Pxl'), yPixels);
     desc1.putObject(charIDToTypeID('T   '), charIDToTypeID('Ofst'), desc2);
     executeAction(charIDToTypeID('move'), desc1, DialogModes.NO);
 };
 //Vloz pravitko horizontalni
-function RulerHorizontal(y) {
+function RulerHorizontal(yPixels) {
     var desc1 = new ActionDescriptor();
     var desc2 = new ActionDescriptor();
-    desc2.putUnitDouble(cTID('Pstn'), cTID('#Pxl'), y);
+    desc2.putUnitDouble(cTID('Pstn'), cTID('#Pxl'), yPixels);
     desc2.putEnumerated(cTID('Ornt'), cTID('Ornt'), cTID('Hrzn'));
     desc1.putObject(cTID('Nw  '), cTID('Gd  '), desc2);
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
 };
 
 //Vloz pravitko vertikalni
-function JachRulerVrtc(x) {
+function JachRulerVrtc(xPixels) {
     var desc1 = new ActionDescriptor();
     var desc2 = new ActionDescriptor();
-    desc2.putUnitDouble(cTID('Pstn'), cTID('#Pxl'), x);
+    desc2.putUnitDouble(cTID('Pstn'), cTID('#Pxl'), xPixels);
     desc2.putEnumerated(cTID('Ornt'), cTID('Ornt'), cTID('Vrtc'));
     desc1.putObject(cTID('Nw  '), cTID('Gd  '), desc2);
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
@@ -862,7 +893,7 @@ function CreateGroup() {
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
 };
 
-function OpacityToPercent(percentage, layerName) { //such as 40
+function opacityToPercent(percentage, layerName) { //such as 40
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putName(cTID('Lyr '), layerName);
@@ -989,7 +1020,7 @@ function setColorOverlay(red, green, blue, opacity, layerName) {
     executeAction(cTID('setd'), desc1, DialogModes.NO);
 };
 
-function InvertMarchingAnts() {
+function invertMarquee() {
     executeAction(cTID('Invs'), undefined, DialogModes.NO);
 };
 
@@ -1089,7 +1120,7 @@ function selectLayerStartingWith(startOfString) {
     var layerName = getNameOfLayerStartingWith(startOfString);
     if (layerName) {
         //alert("found layer name " + layerName);
-        selectLayer(layerName);
+        selectLayers(layerName);
         return true;
     }
     //alert("no layer starting with " + startOfString + " found");
@@ -1119,7 +1150,7 @@ function purgeAllHistory() {
     app.purge(PurgeTarget.HISTORYCACHES);
 }
 
-function CheckIfAnyPalleteIsVisible() {
+function checkIfAnyPalleteIsVisible() {
     var isVisible = false;
     var palletesToCheck = ["Nástroje", "Vrstvy", "Vzorník", "Color", "Informace", "Kanály", "Akce", "Knihovny", "Cesty", "Stopa", "Tools", "Layers", "Swatches", "Color", "Info", "Channels", "Actions", "Libraries", "Paths", "Brush"]
     var ref = new ActionReference();
@@ -1137,6 +1168,18 @@ function CheckIfAnyPalleteIsVisible() {
     }
     return isVisible;
 };
+
+function showPalettes(showBoolean) {
+    if(showBoolean) {
+        if (!checkIfAnyPalleteIsVisible()) {
+            app.togglePalettes();
+        }
+    } else {
+        if (checkIfAnyPalleteIsVisible()) {
+            app.togglePalettes();
+        }
+    }
+}
 
 function GetFilesFromBridge() {
     var fileList;
