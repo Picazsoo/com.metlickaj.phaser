@@ -1,5 +1,6 @@
 ﻿//@include "./polyfill/array_foreach_polyfill.jsx"
 
+//Common library of mine - updated 12/12/2021
 function cTID(s) {
     return app.charIDToTypeID(s);
 };
@@ -7,6 +8,27 @@ function cTID(s) {
 function sTID(s) {
     return app.stringIDToTypeID(s);
 };
+
+function findLayerByName(layerName) {
+    //First try to find the layer among normal layers
+    var layer = app.activeDocument.layers.getByName(layerName);
+    if(layer == undefined || layer == null) {
+        var layers = app.activeDocument.layers;
+        for(var i = 0; i < layers.length; i++) {
+            alert(layers[i]);
+            if(layers[i] instanceof LayerSet) {
+                alert("IS A SET");
+                layer = layers[i].layers.getByName(layerName);
+                if(layer != undefined && layer != null) {
+                    alert("found within set");
+                    break;
+                }
+            }
+        }
+        alert("NOT FOUND within set");
+    }
+    return layer;
+}
 
 // Set
 function setFGColorToRed() {
@@ -45,28 +67,12 @@ function createNewDocument(filename, resW, resH, ppi) {
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
 };
 
-function layerVisibility(layername, visible) {
-    var LyrVis;
-    if (visible == true) {
-        LyrVis = 'Shw '
-    } else {
-        LyrVis = 'Hd  '
-    }
-    var desc1 = new ActionDescriptor();
-    var list1 = new ActionList();
-    var ref1 = new ActionReference();
-    ref1.putName(cTID('Lyr '), layername);
-    list1.putReference(ref1);
-    desc1.putList(cTID('null'), list1);
-    executeAction(cTID(LyrVis), desc1, DialogModes.NO);
-};
-
 function hideLayer(layername) {
-    layerVisibility(layerName, false);
+    setVisibilityByLayerName(false, layerName)
 };
 
 function showLayer(layername) {
-    layerVisibility(layerName, true);
+    setVisibilityByLayerName(false, layerName)
 };
 
 // Set
@@ -157,7 +163,7 @@ function copyLayer(sourceLayer, targetLayerName) {
     }
     executeAction(sTID('copyToLayer'), undefined, DialogModes.NO);
     if(targetLayerName != undefined || sourceLayer != null) {
-        renameLayer(null ,targetLayerName);
+        renameLayerFromTo(null ,targetLayerName);
     }
 };
 
@@ -192,7 +198,7 @@ function newLayer(layerName) {
     desc1.putReference(cTID('null'), ref1);
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
     if(layerName != undefined) {
-        renameLayer(null, layerName);
+        renameLayerFromTo(null, layerName);
     }
 };
 
@@ -277,7 +283,7 @@ function deleteSelectedPixels() {
 };
 
 // Prejmenuj vrstvu
-function renameLayer(layerToRename, newLayerName) {
+function renameLayerFromTo(layerToRename, newLayerName) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     if(layerToRename != undefined || layerToRename != null) {
@@ -307,13 +313,21 @@ function refineEdge() {
 };
 
 // lock /unlockSelected Layers 
-function modifyLayersLock(lockLayers) {
+function modifyLayersLock(setLock, layersToLock) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
-    ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
+    if(layersToLock == undefined != layersToLock == null) {
+        ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
+    } else if (layersToLock instanceof Array) {
+        layersToLock.forEach(function(layerToLock) {
+            ref1.putName(cTID('Lyr '), layerToLock);
+        });
+    } else {
+        ref1.putName(cTID('Lyr '), layersToLock);
+    }
     desc1.putReference(cTID('null'), ref1);
     var desc2 = new ActionDescriptor();
-    desc2.putBoolean(sTID(lockLayers ? "protectAll" : "protectNone"), true);
+    desc2.putBoolean(sTID(setLock ? "protectAll" : "protectNone"), true);
     desc1.putObject(sTID("layerLocking"), sTID("layerLocking"), desc2);
     executeAction(sTID('applyLocking'), desc1, DialogModes.NO);
 };
@@ -365,19 +379,14 @@ function CopySelection(enabled, withDialog) {
 };
 
 // Show
-function ShowLayer(trueorfalse) {
+function ShowLayer(setShowLayer) {
     var desc1 = new ActionDescriptor();
     var list1 = new ActionList();
     var ref1 = new ActionReference();
     ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
     list1.putReference(ref1);
     desc1.putList(cTID('null'), list1);
-    if (trueorfalse == true) {
-        executeAction(cTID('Shw '), desc1, DialogModes.NO);
-    }
-    if (trueorfalse == false) {
-        executeAction(cTID('Hd  '), desc1, DialogModes.NO);
-    }
+    executeAction(cTID(setShowLayer ? 'Shw ' : 'Hd  '), desc1, DialogModes.NO);
 };
 
 // Hide
@@ -473,7 +482,7 @@ function MakeGroupFromSelection() {
 };
 
 // Set selection to square of choice
-function SquareSelection(leftPxl, topPxl, rghtPxl, btomPxl) {
+function squareSelection(leftPxl, topPxl, rghtPxl, btomPxl) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     var topPxl, leftPxl, btomPxl, rghtPxl;
@@ -894,6 +903,11 @@ function CreateGroup() {
 };
 
 function opacityToPercent(percentage, layerName) { //such as 40
+    //check if layer is visible and store the state
+    var isVisible = findLayerByName(layerName).visible;
+    if(!isVisible) {
+        setVisibilityByLayerName(true, layerName);
+    }
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putName(cTID('Lyr '), layerName);
@@ -902,17 +916,10 @@ function opacityToPercent(percentage, layerName) { //such as 40
     desc2.putUnitDouble(cTID('Opct'), cTID('#Prc'), percentage);
     desc1.putObject(cTID('T   '), cTID('Lyr '), desc2);
     executeAction(cTID('setd'), desc1, DialogModes.NO);
-};
-
-function opacityToPercent(percentage, layerName) { //such as 40
-    var desc1 = new ActionDescriptor();
-    var ref1 = new ActionReference();
-    ref1.putName(cTID('Lyr '), layerName);
-    desc1.putReference(cTID('null'), ref1);
-    var desc2 = new ActionDescriptor();
-    desc2.putUnitDouble(cTID('Opct'), cTID('#Prc'), percentage);
-    desc1.putObject(cTID('T   '), cTID('Lyr '), desc2);
-    executeAction(cTID('setd'), desc1, DialogModes.NO);
+    //restore visibility state
+    if(!isVisible) {
+        setVisibilityByLayerName(false, layerName);
+    }
 };
 
 function SelectRGBChannels() {
@@ -978,7 +985,7 @@ function ColorRangeStin() {
     executeAction(sTID('colorRange'), desc1, DialogModes.NO);
 };
 
-function ReduceBGcomplexity() {
+function reduceBGcomplexity() {
     var desc1 = new ActionDescriptor();
     desc1.putInteger(cTID('Fzns'), 35);
     var desc2 = new ActionDescriptor();

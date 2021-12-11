@@ -3,18 +3,24 @@
 
 var transformSettings;
 
-var DIRY = "diry";
-var LINKA_PRO_VYBARVOVANI = "LINKA pro vybarvovani";
-var LINKA = "LINKA";
-var BARVA = "BARVA";
-var BILA = "BILA";
-var SVETLO = "eSVETLO";
-var STIN = "eSTIN";
-var LINKA_BARVA = "LINKA-barva";
-var LINKA_TEXTURE = "LINKA-texture";
-var VRSTVY = "VRSTVY";
-var BACKGROUND = "Background";
-
+var lr = {
+    DIRY: "diry",
+    LINKA_PRO_VYBARVOVANI: "LINKA pro vybarvovani",
+    LINKA: "LINKA",
+    BARVA: "BARVA",
+    BILA: "BILA",
+    SVETLO: "eSVETLO",
+    STIN: "eSTIN",
+    LINKA_BARVA: "LINKA-barva",
+    LINKA_TEXTURE: "LINKA-texture",
+    VRSTVY: "VRSTVY",
+    BACKGROUND: "Background",
+    LAYER1: "Layer 1",
+    LAYER2: "Layer 2",
+    LAYER3: "Layer 3",
+    LAYER4: "Layer 4",
+    LAYER5: "Layer 5"
+}
 
 function loadFiles(source) {
     var files = [];
@@ -35,7 +41,7 @@ function loadFiles(source) {
 }
 
 function batchProcessTiffsToPSDs(transformSettings, filePaths) {
-    showPalettes(true)
+    showPalettes(false)
     var saveOptions = new PhotoshopSaveOptions;
     saveOptions.alphaChannels = true;
     saveOptions.annotations = true;
@@ -93,7 +99,7 @@ function fixBadHoles(transformSettings) {
     rightMarquee.bottom = 370;
 
     selectLayers(DIRY);
-    SquareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom);
+    squareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom);
     colorRangePinkHoles();
 
     var scannedPoints = {
@@ -105,7 +111,7 @@ function fixBadHoles(transformSettings) {
     scannedPoints.left.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
     deselectMarque(); //Zrušení marquee
 
-    SquareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom);
+    squareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom);
     colorRangePinkHoles();
     // VÝPOČET STŘEDU PRAVÉ DÍRY
     scannedPoints.right.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
@@ -159,76 +165,76 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     setCanvasSize(2480); // Canvas Size
     resetSwatches();
     switchSwatch();
-    ReduceBGcomplexity();
+    reduceBGcomplexity();
     fillWithFGColor();
     deselectMarque();
-    copyLayer(BACKGROUND, "Layer 1"); // Layer Via Copy
+    copyLayer(lr.BACKGROUND, lr.LAYER1); // Layer Via Copy
     desaturate(); // Desaturate
     step4(); // Color Range
-    copyLayer("Layer 1", "Layer 2"); // Layer Via Copy
-    newLayer("Layer 3"); // Make
+    copyLayer(lr.LAYER1, lr.LAYER2); // Layer Via Copy
+    newLayer(lr.LAYER3); // Make
     resetSwatches(); // Reset
     fillColor(); // Fill
-    selectLayers("Layer 2"); // Select
+    selectLayers(lr.LAYER2); // Select
     setMarqueByTransparency(); // Set
-    selectLayers("Layer 3"); // Select
+    selectLayers(lr.LAYER3); // Select
     makeMask(); // Make
-    copyLayer("Layer 3", "Layer 4"); // Layer Via Copy
-    selectLayersFromTo("Layer 4","Layer 2"); // Select
+    copyLayer(lr.LAYER3, lr.LAYER4); // Layer Via Copy
+    selectLayersFromTo(lr.LAYER4,lr.LAYER2); // Select
     mergeSelectedLayers(); // Merge Layers
-    renameLayer(null, LINKA); // Set
+    renameLayerFromTo(null, lr.LINKA); // Set
     setMarqueByTransparency(); // Set
     refineEdge(); // Refine Edge
-    copyLayer(LINKA, "LinkaProMe"); // Layer Via Copy
-    renameLayer("LinkaProMe", LINKA_PRO_VYBARVOVANI); // Set
-    setVisibilityByLayersName(false, LINKA);
-    selectLayers("Layer 1"); // Select
+    copyLayer(lr.LINKA, lr.LAYER5); // Layer Via Copy
+    renameLayerFromTo(lr.LAYER5, lr.LINKA_PRO_VYBARVOVANI); // Set
+    setVisibilityByLayersName(false, lr.LINKA);
+    selectLayers(lr.LAYER1); // Select
     setMarqueByTransparency(); // Set
     switchSwatch(); // Exchange
     fillWithFGColor(); // Fill
-    renameLayer("Layer 1", BILA); // Set
-    newLayer(BARVA); // Make
-    selectLayers(BACKGROUND); // Select
-    SquareSelection(0, 0, 3918, 330); // Set
-    copyLayer(BACKGROUND, DIRY); // Layer Via Copy
+    renameLayerFromTo(lr.LAYER1, lr.BILA); // Set
+    newLayer(lr.BARVA); // Make
+    selectLayers(lr.BACKGROUND); // Select
+    squareSelection(0, 0, 3918, 330); // Set
+    copyLayer(lr.BACKGROUND, lr.DIRY); // Layer Via Copy
     moveLayerTo(6); // Move
-    setVisibilityByLayersName(false, BACKGROUND);
-    setVisibilityByLayersName(false, BILA);
-    selectLayers(BACKGROUND); // Select
-    copyLayer(BACKGROUND, LINKA_TEXTURE); // Layer Via Copy
+    setVisibilityByLayersName(false, lr.BACKGROUND);
+    setVisibilityByLayersName(false, lr.BILA);
+    selectLayers(lr.BACKGROUND); // Select
+    copyLayer(lr.BACKGROUND, lr.LINKA_TEXTURE); // Layer Via Copy
     moveLayerTo(5); // Move
     CreateClippingMask(); // Create Clipping Mask
-    ShowLayer(true); // Show
+    setVisibilityByLayersName(true, lr.LINKA_TEXTURE);
     HueSaturationLightness(0, -100, -20); // Hue/Saturation
     LayerBlendStyle(); // Set
-    newLayer(LINKA_BARVA); // Make
+    newLayer(lr.LINKA_BARVA); // Make
     CreateClippingMask(); // Create Clipping Mask
     SelectAllLayers(); // Select All Layers
     MakeGroupFromSelection(); // Make
-    renameLayer(null, VRSTVY); // Set
-    newLayer(STIN); // Make
+    renameLayerFromTo(null, lr.VRSTVY); // Set
+    newLayer(lr.STIN); // Make
     eSTINBlending();
-    newLayer(SVETLO); // Make
+    newLayer(lr.SVETLO); // Make
     eLIGHTBlending();
-    selectLayers(LINKA);
+    selectLayers(lr.LINKA);
     setMarqueByTransparency();
     invertMarquee();
-    selectLayers(LINKA_TEXTURE);
+    selectLayers(lr.LINKA_TEXTURE);
     deleteSelectedPixels();
     deselectMarque();
-    selectLayers(BARVA); // Select
+    selectLayers(lr.BARVA); // Select
 
     //rovnani!
     RulerHorizontal(idealPoints.left.y); //přídá pravítko
     JachRulerVrtc(idealPoints.left.x); //přídá pravítko
     JachRulerVrtc(idealPoints.right.x); //přídá pravítko
-    selectLayers(DIRY); //Výběr děr
-    SquareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom); // Marquee na levou díru
+    selectLayers(lr.DIRY); //Výběr děr
+    squareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom); // Marquee na levou díru
     JachDiraColorRange(); // Marquee výběr kontury díry
     ExpandMarquee(4, false)
     StrokeAroundSelection(4);
     deselectMarque(); //Zrušení marquee
-    SquareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom); // Marquee na levou díru
+    squareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom); // Marquee na levou díru
     colorRangePinkHoles();
 
     //Zde se může odehrát kontrola správnosti výběru díry
@@ -245,13 +251,13 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     //todo: Mel bych tady vybrat ostre tu ruzovou barvu a z ni delat stred - ted ho delam moc brzo
 
     deselectMarque(); //Zrušení marquee
-    SquareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom); //Marquee na pravou díru
+    squareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom); //Marquee na pravou díru
     JachDiraColorRange(); // Marquee výběr kontury díry
 
     ExpandMarquee(4, false)
     StrokeAroundSelection(4);
     deselectMarque(); //Zrušení marquee
-    SquareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom); //Marquee na pravou díru
+    squareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom); //Marquee na pravou díru
     colorRangePinkHoles();
     
     // VÝPOČET STŘEDU PRAVÉ DÍRY
@@ -262,7 +268,7 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     deselectMarque(); //Zrušení marquee
 
     //Tady se musí vybrat group VRSTVY a znovu se ukázat
-    selectLayers(VRSTVY);
+    selectLayers(lr.VRSTVY);
 
 
     var deltaX = scannedPoints.right.x - scannedPoints.left.x; //Výpočet obdélníku tvořeného dírami
@@ -283,65 +289,47 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     var percentScale = (idealPoints.right.x - idealPoints.left.x) / (scannedPoints.right.x - idealPoints.left.x) * 100;
     jachHorizontalTransform(percentScale, idealPoints.left.x, idealPoints.left.y);
 
-    selectLayers(DIRY);
-    modifyLayersLock(true);
-    selectLayers(LINKA_PRO_VYBARVOVANI);
-    modifyLayersLock(true);
-    selectLayers(LINKA_BARVA);
-    modifyLayersLock(false);
-    selectLayers(LINKA);
-    modifyLayersLock(true);
-    selectLayers(BILA);
-    modifyLayersLock(true);
-    selectLayers(BARVA);
+    modifyLayersLock(true, [lr.DIRY, lr.LINKA_PRO_VYBARVOVANI, lr.LINKA, lr.BILA]);
+    modifyLayersLock(false, lr.LINKA_BARVA);
+    selectLayers(lr.BARVA);
+    setVisibilityByLayersName(false, [lr.SVETLO, lr.STIN]);
     createLayerComp("vojta-kyblik", "pro vylevani apod");
 
-    selectLayers(SVETLO);      // Select
-    opacityToPercent(30, SVETLO);      // Set
-    setColorOverlay(255, 255, 255, 100, SVETLO);      // Set
-    selectLayers(STIN);      // Select
-    opacityToPercent(30, STIN);      // Set
-    setColorOverlay(0, 0, 0, 100, SVETLO);      // Set
-    setVisibilityByLayersName(false, LINKA_PRO_VYBARVOVANI);      // Hide
-    setVisibilityByLayersName(true, LINKA);      // Hide
-    selectLayers(BARVA);      // Select
+    opacityToPercent(30, lr.SVETLO);      // Set
+    setColorOverlay(255, 255, 255, 100, lr.SVETLO);      // Set
+    opacityToPercent(30, lr.STIN);      // Set
+    setColorOverlay(0, 0, 0, 100, lr.SVETLO);      // Set
+    setVisibilityByLayersName(false, lr.LINKA_PRO_VYBARVOVANI);      // Hide
+    setVisibilityByLayersName(true, [lr.LINKA, lr.SVETLO, lr.STIN]);      // Hide
+    selectLayers(lr.BARVA);      // Select
     createLayerComp("pavel-upravy", "pro bezne dodelavky");      // Make
 
-    selectLayers(SVETLO);      // Select
-    opacityToPercent(80, SVETLO);      // Set
-    setColorOverlay(0, 0, 255, 100, SVETLO);      // Set
-    selectLayers(STIN);      // Select
-    setColorOverlay(255, 0, 0, 100, STIN);      // Set
-    opacityToPercent(60, STIN);      // Set    // Hide
-    setVisibilityByLayersName(false, LINKA_BARVA);      // Hide
-    setVisibilityByLayersName(false, BARVA);      // Hide
+    opacityToPercent(80, lr.SVETLO);      // Set
+    setColorOverlay(0, 0, 255, 100, lr.SVETLO);      // Set
+    setColorOverlay(255, 0, 0, 100, lr.STIN);      // Set
+    opacityToPercent(60, lr.STIN);      // Set    // Hide
+    setVisibilityByLayersName(false, [ lr.BARVA, lr.LINKA_BARVA]);      // Hide
     createLayerComp("pavel-stinovani", "pro shadower");      // Make
-    setVisibilityByLayersName(false, SVETLO);
-    setVisibilityByLayersName(false, STIN);
+    setVisibilityByLayersName(false, [lr.SVETLO, lr.STIN]);
     createLayerComp("stinovana-faze", "aktualne stinovana faze");      // Make
-    setVisibilityByLayersName(true, SVETLO);
-    setVisibilityByLayersName(true, STIN);
-    setVisibilityByLayersName(true, LINKA_BARVA)      // Show
-    setVisibilityByLayersName(true, BARVA)      // Show
-    selectLayers(SVETLO);      // Select
-    opacityToPercent(30, SVETLO);      // Set
-    setColorOverlay(255, 255, 255, 100, SVETLO);      // Set
-    selectLayers(STIN);      // Select
-    opacityToPercent(30, STIN);      // Set
-    setColorOverlay(0, 0, 0, 100, STIN);      // Set
-    selectLayers(BARVA);      // Select
+    setVisibilityByLayersName(true, [lr.SVETLO, lr.STIN, lr.LINKA_BARVA, lr.BARVA]);
+    opacityToPercent(30, lr.SVETLO);      // Set
+    setColorOverlay(255, 255, 255, 100, lr.SVETLO);      // Set
+    opacityToPercent(30, lr.STIN);      // Set
+    setColorOverlay(0, 0, 0, 100, lr.STIN);      // Set
+    selectLayers(lr.BARVA);      // Select
     createLayerComp("jachym-final", "pro after effects!");
-    createRedOutlineForDespecle(VRSTVY);
-    setVisibilityByLayersName(false, [SVETLO, STIN]);
+    createRedOutlineForDespecle(lr.VRSTVY);
+    setVisibilityByLayersName(false, [lr.SVETLO, lr.STIN]);
     createLayerComp("jachym-despecle", "pro despeckle!");
-    setVisibilityByLayersName(true, [SVETLO, STIN]);
-    hideRedOutlineForDespecle(VRSTVY);
-    setVisibilityByLayersName(false, [SVETLO, STIN]);
+    setVisibilityByLayersName(true, [lr.SVETLO, lr.STIN]);
+    hideRedOutlineForDespecle(lr.VRSTVY);
+    setVisibilityByLayersName(false, [lr.SVETLO, lr.STIN]);
     createLayerComp("jachym-imagej", "pro imageJ!");
-    setVisibilityByLayersName(true, [SVETLO, STIN]);
+    setVisibilityByLayersName(true, [lr.SVETLO, lr.STIN]);
     // //ted vybrat zaklad pro vojtu
     applyLayerComp("vojta-kyblik");      // Apply
-    selectLayers(BARVA);
+    selectLayers(lr.BARVA);
 
     app.activeDocument.info.author = "Zpracovano";
 
