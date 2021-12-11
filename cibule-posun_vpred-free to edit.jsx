@@ -216,7 +216,7 @@ var docRef = app.activeDocument, curFilePath, curFileName, layerName, onionLayer
         app.togglePalettes();
     };
 if(docRef.name == "stinovani"){
-    SelectLayer("eSTINY");
+    selectLayer("eSTINY");
     layerName = app.activeDocument.layers[1].name;
     curFilePath = layerName.substring(0, layerName.lastIndexOf("/")+1);
     curFileName = layerName.substring(layerName.lastIndexOf("/")+1, layerName.length)
@@ -225,8 +225,8 @@ if(docRef.name == "stinovani"){
     nextFile = onionLayers[2];
     currentFile = onionLayers[1];
     prevFile = onionLayers[0];
-    LayerVisibility("BARVA", false);
-    SelectLayer("eSTIN");
+    layerVisibility("BARVA", false);
+    selectLayer("eSTIN");
     DeleteLayer();
     app.activeDocument = app.documents[0];
     DuplicateLayerIntoDocument("eSTIN", app.documents[1].name)
@@ -234,46 +234,46 @@ if(docRef.name == "stinovani"){
     
     if (nextFile == "end") {
         app.activeDocument = app.documents[0];
-        SelectLayer("eSTINY");
+        selectLayer("eSTINY");
         layerName = app.activeDocument.layers[1].name;
         curFilePath = layerName.substring(0, layerName.lastIndexOf("/")+1);
         curFileName = layerName.substring(layerName.lastIndexOf("/")+1, layerName.length)
         DeleteLayer();
         docRef = open(File(layerName));
         WriteLastFileToDisk("~/Desktop/", "temp_stinovac.txt", layerName);
-        SelectLayer("eSTIN");
-        LayerVisibility("eSTIN", true);
+        selectLayer("eSTIN");
+        layerVisibility("eSTIN", true);
         DuplicateLayerIntoDocument("eSTINY", app.documents[0].name)
-        LayerVisibility("eSTIN", false);
-        LayerVisibility("BARVA", false);
+        layerVisibility("eSTIN", false);
+        layerVisibility("BARVA", false);
         docRef.close(SaveOptions.SAVECHANGES);        
         app.activeDocument = app.documents[0];
-        SelectLayer("eSTINY");
+        selectLayer("eSTINY");
     } else {
         app.activeDocument = app.documents[0];
-        SelectLayer(curFilePath + currentFile);
+        selectLayer(curFilePath + currentFile);
         OpacityToPercent(40);
         PlacePSD(curFilePath + nextFile);
-        RenameLayer(curFilePath + nextFile);     
+        renameLayer(curFilePath + nextFile);     
         layerName = app.activeDocument.layers[1].name;
         curFilePath = layerName.substring(0, layerName.lastIndexOf("/")+1);
         curFileName = layerName.substring(layerName.lastIndexOf("/")+1, layerName.length)
-        SelectLayer("eSTINY");
+        selectLayer("eSTINY");
         DeleteLayer();
         docRef = open(File(layerName));
         WriteLastFileToDisk("~/Desktop/", "temp_stinovac.txt", layerName);
-        SelectLayer("eSTIN");
-        LayerVisibility("eSTIN", true);
+        selectLayer("eSTIN");
+        layerVisibility("eSTIN", true);
         DuplicateLayerIntoDocument("eSTINY", app.documents[0].name);
-        LayerVisibility("eSTIN", false);
-        LayerVisibility("BARVA", false);
+        layerVisibility("eSTIN", false);
+        layerVisibility("BARVA", false);
         docRef.close(SaveOptions.SAVECHANGES);
         app.activeDocument = app.documents[0];
-        SelectLayer("eSTINY");
+        selectLayer("eSTINY");
         if(prevFile != "start") {
-            SelectLayer(curFilePath + prevFile);
+            selectLayer(curFilePath + prevFile);
             DeleteLayer();
-            SelectLayer("eSTINY");
+            selectLayer("eSTINY");
         }
     }
 } else {
@@ -289,22 +289,22 @@ if(docRef.name == "stinovani"){
     }app.togglePalettes();
         return
         }
-    CreateNewDocument("stinovani", 3918, 2480, 300);
+    createNewDocument("stinovani", 3918, 2480, 300);
     if(prevFile != "start") {
         PlacePSD(curFilePath + prevFile);
-        RenameLayer(curFilePath + prevFile);
+        renameLayer(curFilePath + prevFile);
         OpacityToPercent(40);
     }
     PlacePSD(curFilePath + currentFile);
-    RenameLayer(curFilePath + currentFile);
+    renameLayer(curFilePath + currentFile);
     OpacityToPercent(40);
     WriteLastFileToDisk("~/Desktop/", "temp_stinovac.txt", curFilePath + currentFile);
     app.activeDocument = app.documents[0];
-    SelectLayer("eSTIN");
-    LayerVisibility("eSTIN", true);
+    selectLayer("eSTIN");
+    layerVisibility("eSTIN", true);
     DuplicateLayerIntoDocument("eSTINY", app.documents[1].name); //such as ("eSTIN",hele.psd); Places above currently selected layer
-    LayerVisibility("eSTIN", false);
-    LayerVisibility("BARVA", false);
+    layerVisibility("eSTIN", false);
+    layerVisibility("BARVA", false);
     docRef.close(SaveOptions.SAVECHANGES);
     }
     app.togglePalettes();

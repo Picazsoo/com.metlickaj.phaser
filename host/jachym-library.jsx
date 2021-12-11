@@ -7,7 +7,7 @@ function sTID(s) {
 };
 
 // Set
-function SetFGColorToRed() {
+function setFGColorToRed() {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putProperty(cTID('Clr '), cTID('FrgC'));
@@ -21,7 +21,7 @@ function SetFGColorToRed() {
     executeAction(cTID('setd'), desc1, DialogModes.NO);
 };
 
-function CreateNewDocument(filename, resW, resH, ppi) {
+function createNewDocument(filename, resW, resH, ppi) {
     var width;
     var height;
     var dpi;
@@ -43,7 +43,7 @@ function CreateNewDocument(filename, resW, resH, ppi) {
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
 };
 
-function LayerVisibility(layername, visible) {
+function layerVisibility(layername, visible) {
     var LyrVis;
     if (visible == true) {
         LyrVis = 'Shw '
@@ -60,15 +60,15 @@ function LayerVisibility(layername, visible) {
 };
 
 function hideLayer(layername) {
-    LayerVisibility(layerName, false);
+    layerVisibility(layerName, false);
 };
 
 function showLayer(layername) {
-    LayerVisibility(layerName, true);
+    layerVisibility(layerName, true);
 };
 
 // Set
-function SelectAllPixels() {
+function selectAllPixels() {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putProperty(cTID('Chnl'), sTID("selection"));
@@ -77,12 +77,12 @@ function SelectAllPixels() {
     executeAction(cTID('setd'), desc1, DialogModes.NO);
 };
 // Cut
-function CutSelected() {
+function cutSelected() {
 
     executeAction(cTID('cut '), undefined, DialogModes.NO);
 };
 // Paste
-function PasteInPlace() {
+function pasteInPlace() {
     var desc1 = new ActionDescriptor();
     desc1.putBoolean(sTID("inPlace"), true);
     desc1.putEnumerated(cTID('AntA'), cTID('Annt'), cTID('Anno'));
@@ -90,7 +90,7 @@ function PasteInPlace() {
 };
 
 // Set
-function FillWithFGColor() {
+function fillWithFGColor() {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putProperty(cTID('Clr '), cTID('FrgC'));
@@ -104,12 +104,12 @@ function FillWithFGColor() {
     executeAction(cTID('setd'), desc1, DialogModes.NO);
 };
 
-function Close() {
+function close() {
     executeAction(cTID('Cls '), undefined, DialogModes.NO);
 };
 
 // Fill entire layer with fg color
-function FillEntireLayerWithFGColor() {
+function fillEntireLayerWithFGColor() {
     var desc1 = new ActionDescriptor();
     desc1.putEnumerated(cTID('Usng'), cTID('FlCn'), cTID('FrgC'));
     desc1.putUnitDouble(cTID('Opct'), cTID('#Prc'), 100);
@@ -140,7 +140,7 @@ function setZoom(zoom) {
 }
 
 // Canvas Size
-function SetCanvasSize(Height) {
+function setCanvasSize(Height) {
     var desc1 = new ActionDescriptor();
     desc1.putUnitDouble(cTID('Hght'), cTID('#Pxl'), Height);
     desc1.putEnumerated(cTID('Vrtc'), cTID('VrtL'), cTID('Cntr'));
@@ -149,12 +149,18 @@ function SetCanvasSize(Height) {
 };
 
 // Layer Via Copy
-function CopyLayer() {
+function copyLayer(sourceLayer, targetLayerName) {
+    if(sourceLayer != undefined || sourceLayer != null) {
+        selectLayer(sourceLayer);
+    }
     executeAction(sTID('copyToLayer'), undefined, DialogModes.NO);
+    if(targetLayerName != undefined || sourceLayer != null) {
+        renameLayer(targetLayerName);
+    }
 };
 
 // Desaturate
-function Desaturate() {
+function desaturate() {
     executeAction(cTID('Dstt'), undefined, DialogModes.NO);
 };
 
@@ -177,16 +183,19 @@ function step4() {
 };
 
 // Make
-function NewLayer() {
+function newLayer(layerName) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putClass(cTID('Lyr '));
     desc1.putReference(cTID('null'), ref1);
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
+    if(layerName != undefined) {
+        renameLayer(layerName);
+    }
 };
 
 // Reset
-function ResetSwatches() {
+function resetSwatches() {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putProperty(cTID('Clr '), cTID('Clrs'));
@@ -195,7 +204,7 @@ function ResetSwatches() {
 };
 
 // Fill
-function FillColor() {
+function fillColor() {
     var desc1 = new ActionDescriptor();
     var desc2 = new ActionDescriptor();
     desc2.putUnitDouble(cTID('Hrzn'), cTID('#Rlt'), 448.2);
@@ -208,7 +217,7 @@ function FillColor() {
 };
 
 // Select
-function SelectLayer(layerName) {
+function selectLayer(layerName) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putName(cTID('Lyr '), layerName);
@@ -218,7 +227,7 @@ function SelectLayer(layerName) {
 };
 
 // Make
-function MakeMask() {
+function makeMask() {
     var desc1 = new ActionDescriptor();
     desc1.putClass(cTID('Nw  '), cTID('Chnl'));
     var ref1 = new ActionReference();
@@ -229,7 +238,7 @@ function MakeMask() {
 };
 
 // Select
-function SelectLayerContinuous(layerName) {
+function selectLayerContinuous(layerName) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putName(cTID('Lyr '), layerName);
@@ -240,18 +249,18 @@ function SelectLayerContinuous(layerName) {
 };
 
 // Merge Layers
-function MergeSelectedLayers() {
+function mergeSelectedLayers() {
     var desc1 = new ActionDescriptor();
     executeAction(sTID('mergeLayersNew'), desc1, DialogModes.NO);
 };
 
 // Delete
-function DeletePixels() {
+function deletePixels() {
     executeAction(cTID('Dlt '), undefined, DialogModes.NO);
 };
 
 // Prejmenuj vrstvu
-function RenameLayer(jmenoVrstvy) {
+function renameLayer(jmenoVrstvy) {
     var jmenoVrstvy;
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
@@ -264,7 +273,7 @@ function RenameLayer(jmenoVrstvy) {
 };
 
 // Refine Edge
-function RefineEdge() {
+function refineEdge() {
     var desc1 = new ActionDescriptor();
     desc1.putUnitDouble(sTID("refineEdgeBorderRadius"), cTID('#Pxl'), 0);
     desc1.putUnitDouble(sTID("refineEdgeBorderContrast"), cTID('#Prc'), 100);
@@ -278,26 +287,20 @@ function RefineEdge() {
 };
 
 // lock /unlockSelected Layers 
-function ModifyLayersLock(ifLockPassTrue) {
-    var jachTask;
-    if (ifLockPassTrue == true) {
-        jachTask = "protectAll"
-    } else {
-        jachTask = "protectNone"
-    }
+function modifyLayersLock(lockLayers) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
     desc1.putReference(cTID('null'), ref1);
     var desc2 = new ActionDescriptor();
-    desc2.putBoolean(sTID(jachTask), true);
+    desc2.putBoolean(sTID(lockLayers ? "protectAll" : "protectNone"), true);
     desc1.putObject(sTID("layerLocking"), sTID("layerLocking"), desc2);
     executeAction(sTID('applyLocking'), desc1, DialogModes.NO);
 };
 
 
 // Exchange
-function SwitchSwatch() {
+function switchSwatch() {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putProperty(cTID('Clr '), cTID('Clrs'));
@@ -306,7 +309,7 @@ function SwitchSwatch() {
 };
 
 // Fill
-function FillWithFGColor() {
+function fillWithFGColor() {
     var desc1 = new ActionDescriptor();
     desc1.putEnumerated(cTID('Usng'), cTID('FlCn'), cTID('FrgC'));
     desc1.putUnitDouble(cTID('Opct'), cTID('#Prc'), 100);
@@ -315,7 +318,7 @@ function FillWithFGColor() {
 };
 
 // Move
-function MoveLayerTo(index) {
+function moveLayerTo(index) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
@@ -859,10 +862,21 @@ function CreateGroup() {
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
 };
 
-function OpacityToPercent(percentage) { //such as 40
+function OpacityToPercent(percentage, layerName) { //such as 40
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
-    ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
+    ref1.putName(cTID('Lyr '), layerName);
+    desc1.putReference(cTID('null'), ref1);
+    var desc2 = new ActionDescriptor();
+    desc2.putUnitDouble(cTID('Opct'), cTID('#Prc'), percentage);
+    desc1.putObject(cTID('T   '), cTID('Lyr '), desc2);
+    executeAction(cTID('setd'), desc1, DialogModes.NO);
+};
+
+function opacityToPercent(percentage, layerName) { //such as 40
+    var desc1 = new ActionDescriptor();
+    var ref1 = new ActionReference();
+    ref1.putName(cTID('Lyr '), layerName);
     desc1.putReference(cTID('null'), ref1);
     var desc2 = new ActionDescriptor();
     desc2.putUnitDouble(cTID('Opct'), cTID('#Prc'), percentage);
@@ -951,11 +965,11 @@ function ReduceBGcomplexity() {
 };
 
 // Set
-function setColorOverlay(red, green, blue, opacity) {
+function setColorOverlay(red, green, blue, opacity, layerName) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     ref1.putProperty(cTID('Prpr'), cTID('Lefx'));
-    ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
+    ref1.putName(cTID('Lyr '), layerName);
     desc1.putReference(cTID('null'), ref1);
     var desc2 = new ActionDescriptor();
     desc2.putUnitDouble(cTID('Scl '), cTID('#Prc'), 416.666666666667);
@@ -978,6 +992,47 @@ function setColorOverlay(red, green, blue, opacity) {
 function InvertMarchingAnts() {
     executeAction(cTID('Invs'), undefined, DialogModes.NO);
 };
+
+// Set
+function createRedOutlineForDespecle(layerName) {
+    var desc1 = new ActionDescriptor();
+    var ref1 = new ActionReference();
+    ref1.putProperty(cTID('Prpr'), cTID('Lefx'));
+    ref1.putName(cTID('Lyr '), layerName);
+    desc1.putReference(cTID('null'), ref1);
+    var desc2 = new ActionDescriptor();
+    desc2.putUnitDouble(cTID('Scl '), cTID('#Prc'), 416.666666666667);
+    var desc3 = new ActionDescriptor();
+    desc3.putBoolean(cTID('enab'), true);
+    desc3.putBoolean(sTID("present"), true);
+    desc3.putBoolean(sTID("showInDialog"), true);
+    desc3.putEnumerated(cTID('Styl'), cTID('FStl'), cTID('OutF'));
+    desc3.putEnumerated(cTID('PntT'), cTID('FrFl'), cTID('SClr'));
+    desc3.putEnumerated(cTID('Md  '), cTID('BlnM'), cTID('Nrml'));
+    desc3.putUnitDouble(cTID('Opct'), cTID('#Prc'), 100);
+    desc3.putUnitDouble(cTID('Sz  '), cTID('#Pxl'), 6);
+    var desc4 = new ActionDescriptor();
+    desc4.putDouble(cTID('Rd  '), 255);
+    desc4.putDouble(cTID('Grn '), 0);
+    desc4.putDouble(cTID('Bl  '), 0);
+    desc3.putObject(cTID('Clr '), sTID("RGBColor"), desc4);
+    desc3.putBoolean(sTID("overprint"), false);
+    desc2.putObject(cTID('FrFX'), cTID('FrFX'), desc3);
+    desc1.putObject(cTID('T   '), cTID('Lefx'), desc2);
+    executeAction(cTID('setd'), desc1, DialogModes.NO);
+  };
+
+  // Hide
+  function hideRedOutlineForDespecle(layerName) {
+    var desc1 = new ActionDescriptor();
+    var list1 = new ActionList();
+    var ref1 = new ActionReference();
+    ref1.putIndex(cTID('FrFX'), 1);
+    ref1.putName(cTID('Lyr '), layerName);
+    list1.putReference(ref1);
+    desc1.putList(cTID('null'), list1);
+    executeAction(cTID('Hd  '), desc1, DialogModes.NO);
+  };
 
 //aplikuje layer comp na smart object podle jména. když nenajde, tak neudělá nic.
 function setSmartObjLayerCompByName(name) {
@@ -1034,7 +1089,7 @@ function selectLayerStartingWith(startOfString) {
     var layerName = getNameOfLayerStartingWith(startOfString);
     if (layerName) {
         //alert("found layer name " + layerName);
-        SelectLayer(layerName);
+        selectLayer(layerName);
         return true;
     }
     //alert("no layer starting with " + startOfString + " found");
