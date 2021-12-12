@@ -34,7 +34,7 @@ const defaultMarquees = {
 //Uzivatelem volene vybery pro detekci der
 
 'use strict';
-jsx.file('./host/linka_a_rovnani.jsx');
+jsx.file('./host/phaser.jsx');
 //theme manager to switch between dark mode and light mode
 themeManager.init();
 

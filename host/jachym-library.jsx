@@ -12,14 +12,14 @@ function sTID(s) {
 function findLayerByName(layerName) {
     //First try to find the layer among normal layers
     var layer = app.activeDocument.layers.getByName(layerName);
-    if(layer == undefined || layer == null) {
+    if (layer == undefined || layer == null) {
         var layers = app.activeDocument.layers;
-        for(var i = 0; i < layers.length; i++) {
+        for (var i = 0; i < layers.length; i++) {
             alert(layers[i]);
-            if(layers[i] instanceof LayerSet) {
+            if (layers[i] instanceof LayerSet) {
                 alert("IS A SET");
                 layer = layers[i].layers.getByName(layerName);
-                if(layer != undefined && layer != null) {
+                if (layer != undefined && layer != null) {
                     alert("found within set");
                     break;
                 }
@@ -67,12 +67,12 @@ function createNewDocument(filename, resW, resH, ppi) {
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
 };
 
-function hideLayer(layername) {
-    setVisibilityByLayerName(false, layerName)
+function hideLayers(layerNames) {
+    setVisibilityByLayersName(false, layerNames)
 };
 
-function showLayer(layername) {
-    setVisibilityByLayerName(false, layerName)
+function showLayers(layerNames) {
+    setVisibilityByLayersName(true, layerNames)
 };
 
 // Set
@@ -134,7 +134,7 @@ function parseXMPInfo(xmpString) {
 }
 
 function setZoom(zoom) {
-    cTID = function(s) {
+    cTID = function (s) {
         return app.charIDToTypeID(s);
     };
     var docRes = activeDocument.resolution;
@@ -158,12 +158,12 @@ function setCanvasSize(Height) {
 
 // Layer Via Copy
 function copyLayer(sourceLayer, targetLayerName) {
-    if(sourceLayer != undefined || sourceLayer != null) {
+    if (sourceLayer != undefined || sourceLayer != null) {
         selectLayers(sourceLayer);
     }
     executeAction(sTID('copyToLayer'), undefined, DialogModes.NO);
-    if(targetLayerName != undefined || sourceLayer != null) {
-        renameLayerFromTo(null ,targetLayerName);
+    if (targetLayerName != undefined || sourceLayer != null) {
+        renameLayerFromTo(null, targetLayerName);
     }
 };
 
@@ -173,18 +173,18 @@ function desaturate() {
 };
 
 // Color Range
-function step4() {
+function colorRange(range) {
     var desc1 = new ActionDescriptor();
-    desc1.putInteger(cTID('Fzns'), 172);
+    desc1.putInteger(cTID('Fzns'), range.fuzziness);
     var desc2 = new ActionDescriptor();
-    desc2.putDouble(cTID('Lmnc'), 12.25);
-    desc2.putDouble(cTID('A   '), 0);
-    desc2.putDouble(cTID('B   '), 0);
+    desc2.putDouble(cTID('Lmnc'), range.min.luminance);
+    desc2.putDouble(cTID('A   '), range.min.a);
+    desc2.putDouble(cTID('B   '), range.min.b);
     desc1.putObject(cTID('Mnm '), cTID('LbCl'), desc2);
     var desc3 = new ActionDescriptor();
-    desc3.putDouble(cTID('Lmnc'), 12.25);
-    desc3.putDouble(cTID('A   '), 0);
-    desc3.putDouble(cTID('B   '), 0);
+    desc3.putDouble(cTID('Lmnc'), range.max.luminance);
+    desc3.putDouble(cTID('A   '), range.max.a);
+    desc3.putDouble(cTID('B   '), range.max.b);
     desc1.putObject(cTID('Mxm '), cTID('LbCl'), desc3);
     desc1.putInteger(sTID("colorModel"), 0);
     executeAction(sTID('colorRange'), desc1, DialogModes.NO);
@@ -197,7 +197,7 @@ function newLayer(layerName) {
     ref1.putClass(cTID('Lyr '));
     desc1.putReference(cTID('null'), ref1);
     executeAction(cTID('Mk  '), desc1, DialogModes.NO);
-    if(layerName != undefined) {
+    if (layerName != undefined) {
         renameLayerFromTo(null, layerName);
     }
 };
@@ -226,13 +226,13 @@ function fillColor() {
 
 // Select
 function selectLayers(layerNames) {
-    if(layerNames instanceof Array) {
-        layerNames.forEach(function(layerNameInArray, layerIndex) {
+    if (layerNames instanceof Array) {
+        layerNames.forEach(function (layerNameInArray, layerIndex) {
             var desc1 = new ActionDescriptor();
             var ref1 = new ActionReference();
             ref1.putName(cTID('Lyr '), layerNameInArray);
             desc1.putReference(cTID('null'), ref1);
-            if(layerIndex > 0) {
+            if (layerIndex > 0) {
                 desc1.putEnumerated(sTID("selectionModifier"), sTID("selectionModifierType"), sTID("addToSelection"));
             }
             desc1.putBoolean(cTID('MkVs'), false);
@@ -286,7 +286,7 @@ function deleteSelectedPixels() {
 function renameLayerFromTo(layerToRename, newLayerName) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
-    if(layerToRename != undefined || layerToRename != null) {
+    if (layerToRename != undefined || layerToRename != null) {
         ref1.putName(cTID('Lyr '), layerToRename);
     } else {
         ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
@@ -316,10 +316,10 @@ function refineEdge() {
 function modifyLayersLock(setLock, layersToLock) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
-    if(layersToLock == undefined != layersToLock == null) {
+    if (layersToLock == undefined != layersToLock == null) {
         ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
     } else if (layersToLock instanceof Array) {
-        layersToLock.forEach(function(layerToLock) {
+        layersToLock.forEach(function (layerToLock) {
             ref1.putName(cTID('Lyr '), layerToLock);
         });
     } else {
@@ -391,28 +391,24 @@ function ShowLayer(setShowLayer) {
 
 // Hide
 function setVisibilityByLayersName(setVisible, layerNames) {
-    if(layerNames instanceof Array) {
-        layerNames.forEach(function(layerName) {
+    if (layerNames instanceof Array) {
+        layerNames.forEach(function (layerName) {
             setVisibilityByLayerName(setVisible, layerName);
         });
-    } else {      
+    } else {
         setVisibilityByLayerName(setVisible, layerNames);
     }
 };
 
 // Hide
-function setVisibilityByLayerName(visible, layerName) {
+function setVisibilityByLayerName(setVisible, layerName) {
     var desc1 = new ActionDescriptor();
     var list1 = new ActionList();
     var ref1 = new ActionReference();
     ref1.putName(cTID('Lyr '), layerName);
     list1.putReference(ref1);
     desc1.putList(cTID('null'), list1);
-    if (visible) {
-        executeAction(cTID('Shw '), desc1, DialogModes.NO);
-    } else {
-        executeAction(cTID('Hd  '), desc1, DialogModes.NO);
-    }
+    executeAction(cTID(setVisible ? 'Shw ' : 'Hd  '), desc1, DialogModes.NO);
 };
 
 // Hue/Saturation
@@ -482,10 +478,21 @@ function MakeGroupFromSelection() {
 };
 
 // Set selection to square of choice
-function squareSelection(leftPxl, topPxl, rghtPxl, btomPxl) {
+function squareMarquee(marqueeCoordinates) {
     var desc1 = new ActionDescriptor();
     var ref1 = new ActionReference();
     var topPxl, leftPxl, btomPxl, rghtPxl;
+    if(marqueeCoordinates instanceof Array) {
+        leftPxl = marqueeCoordinates[0];
+        topPxl = marqueeCoordinates[1];
+        rghtPxl = marqueeCoordinates[2];
+        btomPxl = marqueeCoordinates[3];
+    } else if (marqueeCoordinates instanceof Object) {
+        leftPxl = marqueeCoordinates.left;
+        topPxl = marqueeCoordinates.top;
+        rghtPxl = marqueeCoordinates.right;
+        btomPxl = marqueeCoordinates.bottom;
+    }
     ref1.putProperty(cTID('Chnl'), sTID("selection"));
     desc1.putReference(cTID('null'), ref1);
     var desc2 = new ActionDescriptor();
@@ -496,78 +503,6 @@ function squareSelection(leftPxl, topPxl, rghtPxl, btomPxl) {
     desc1.putObject(cTID('T   '), cTID('Rctn'), desc2);
     executeAction(cTID('setd'), desc1, DialogModes.NO);
 };
-
-// Color Range - puvodni skener
-/*function JachDiraColorRange() {
-var desc1 = new ActionDescriptor();
-desc1.putInteger(cTID('Fzns'), 0);
-var desc2 = new ActionDescriptor();
-desc2.putDouble(cTID('Lmnc'), 63.97);
-desc2.putDouble(cTID('A   '), -59.22);
-desc2.putDouble(cTID('B   '), -0.32);
-desc1.putObject(cTID('Mnm '), cTID('LbCl'), desc2);
-var desc3 = new ActionDescriptor();
-desc3.putDouble(cTID('Lmnc'), 85.8);
-desc3.putDouble(cTID('A   '), -15.69);
-desc3.putDouble(cTID('B   '), 12.7);
-desc1.putObject(cTID('Mxm '), cTID('LbCl'), desc3);
-desc1.putInteger(sTID("colorModel"), 0);
-executeAction(sTID('colorRange'), desc1, DialogModes.NO);
-};
-*/
-// Color Range - novy skener - elektricka paska
-function JachDiraColorRange() {
-    var desc1 = new ActionDescriptor();
-    desc1.putInteger(cTID('Fzns'), 70);
-    var desc2 = new ActionDescriptor();
-    desc2.putDouble(cTID('Lmnc'), 92.23);
-    desc2.putDouble(cTID('A   '), -29.87);
-    desc2.putDouble(cTID('B   '), -1.63);
-    desc1.putObject(cTID('Mnm '), cTID('LbCl'), desc2);
-    var desc3 = new ActionDescriptor();
-    desc3.putDouble(cTID('Lmnc'), 93.96);
-    desc3.putDouble(cTID('A   '), -27.04);
-    desc3.putDouble(cTID('B   '), 0.69);
-    desc1.putObject(cTID('Mxm '), cTID('LbCl'), desc3);
-    desc1.putInteger(sTID("colorModel"), 0);
-    executeAction(sTID('colorRange'), desc1, DialogModes.NO);
-};
-
-//Color Range barva tank...
-function colorRangeBarvaTank() {
-    var desc1 = new ActionDescriptor();
-    desc1.putInteger(cTID('Fzns'), 103);
-    var desc2 = new ActionDescriptor();
-    desc2.putDouble(cTID('Lmnc'), 51.42);
-    desc2.putDouble(cTID('A   '), 49.38);
-    desc2.putDouble(cTID('B   '), -13.93);
-    desc1.putObject(cTID('Mnm '), cTID('LbCl'), desc2);
-    var desc3 = new ActionDescriptor();
-    desc3.putDouble(cTID('Lmnc'), 69.91);
-    desc3.putDouble(cTID('A   '), 80.36);
-    desc3.putDouble(cTID('B   '), 38.72);
-    desc1.putObject(cTID('Mxm '), cTID('LbCl'), desc3);
-    desc1.putInteger(sTID("colorModel"), 0);
-    executeAction(sTID('colorRange'), desc1, DialogModes.NO);
-};
-
-//color range oprava der - ruzova
-function colorRangePinkHoles() {
-    var desc1 = new ActionDescriptor();
-    desc1.putInteger(cTID('Fzns'), 39);
-    var desc2 = new ActionDescriptor();
-    desc2.putDouble(cTID('Lmnc'), 58.47);
-    desc2.putDouble(cTID('A   '), 87.95);
-    desc2.putDouble(cTID('B   '), -36.21);
-    desc1.putObject(cTID('Mnm '), cTID('LbCl'), desc2);
-    var desc3 = new ActionDescriptor();
-    desc3.putDouble(cTID('Lmnc'), 58.47);
-    desc3.putDouble(cTID('A   '), 87.95);
-    desc3.putDouble(cTID('B   '), -36.21);
-    desc1.putObject(cTID('Mxm '), cTID('LbCl'), desc3);
-    desc1.putInteger(sTID("colorModel"), 0);
-    executeAction(sTID('colorRange'), desc1, DialogModes.NO);
-  };
 
 // Zkopiruj vrstvu (kdyz selection, tak jen vybranou cast)
 function JachCopyToLayer() {
@@ -705,9 +640,9 @@ function CreateGuides(guidesTXT) { //   "~/Desktop/temp_stinovac-guides.txt"
             parameters = guideAry[i].split(", ");
             parameters[1] = parameters[1].replace(" px", "");
             if (parameters[0] == "Direction.HORIZONTAL") {
-                RulerHorizontal(parameters[1]);
+                addHorizontalRuler(parameters[1]);
             } else if (parameters[0] == "Direction.VERTICAL") {
-                JachRulerVrtc(parameters[1])
+                addVerticalRuler(parameters[1])
             }
         }
     }
@@ -726,7 +661,7 @@ function moveLayerPixels(xPixels, yPixels) {
     executeAction(charIDToTypeID('move'), desc1, DialogModes.NO);
 };
 //Vloz pravitko horizontalni
-function RulerHorizontal(yPixels) {
+function addHorizontalRuler(yPixels) {
     var desc1 = new ActionDescriptor();
     var desc2 = new ActionDescriptor();
     desc2.putUnitDouble(cTID('Pstn'), cTID('#Pxl'), yPixels);
@@ -736,7 +671,7 @@ function RulerHorizontal(yPixels) {
 };
 
 //Vloz pravitko vertikalni
-function JachRulerVrtc(xPixels) {
+function addVerticalRuler(xPixels) {
     var desc1 = new ActionDescriptor();
     var desc2 = new ActionDescriptor();
     desc2.putUnitDouble(cTID('Pstn'), cTID('#Pxl'), xPixels);
@@ -752,7 +687,7 @@ function ExpandMarquee(pixelsDistance, atCanvasBounds) {
     executeAction(cTID('Expn'), desc1, DialogModes.NO);
 };
 // Obkresli diru
-function StrokeAroundSelection(pixelWidth) {
+function strokeAroundMarquee(pixelWidth) {
     var desc1 = new ActionDescriptor();
     desc1.putInteger(cTID('Wdth'), pixelWidth);
     desc1.putEnumerated(cTID('Lctn'), cTID('StrL'), cTID('Otsd'));
@@ -905,7 +840,7 @@ function CreateGroup() {
 function opacityToPercent(percentage, layerName) { //such as 40
     //check if layer is visible and store the state
     var isVisible = findLayerByName(layerName).visible;
-    if(!isVisible) {
+    if (!isVisible) {
         setVisibilityByLayerName(true, layerName);
     }
     var desc1 = new ActionDescriptor();
@@ -917,7 +852,7 @@ function opacityToPercent(percentage, layerName) { //such as 40
     desc1.putObject(cTID('T   '), cTID('Lyr '), desc2);
     executeAction(cTID('setd'), desc1, DialogModes.NO);
     //restore visibility state
-    if(!isVisible) {
+    if (!isVisible) {
         setVisibilityByLayerName(false, layerName);
     }
 };
@@ -954,8 +889,6 @@ function PlacePSD(fileNameAndPath) { //such as "/e/90/90_ae/FAZE/01_FAZE_002.psd
 };
 
 function DuplicateLayerIntoDocument(layer, targetDocument) { //such as ("eSTIN",hele.psd); Places above currently selected layer
-    var layerToDup = layer;
-    var dupToDoc = targetDocument;
     var ref1 = new ActionReference();
     var desc1 = new ActionDescriptor();
     ref1.putEnumerated(cTID('Lyr '), cTID('Ordn'), cTID('Trgt'));
@@ -966,40 +899,6 @@ function DuplicateLayerIntoDocument(layer, targetDocument) { //such as ("eSTIN",
     desc1.putString(cTID('Nm  '), layer);
     desc1.putInteger(cTID('Vrsn'), 5);
     executeAction(cTID('Dplc'), desc1, DialogModes.NO);
-};
-
-function ColorRangeStin() {
-    var desc1 = new ActionDescriptor();
-    desc1.putInteger(cTID('Fzns'), 95);
-    var desc2 = new ActionDescriptor();
-    desc2.putDouble(cTID('Lmnc'), 35.28);
-    desc2.putDouble(cTID('A   '), 54.38);
-    desc2.putDouble(cTID('B   '), -18.04);
-    desc1.putObject(cTID('Mnm '), cTID('LbCl'), desc2);
-    var desc3 = new ActionDescriptor();
-    desc3.putDouble(cTID('Lmnc'), 66.13);
-    desc3.putDouble(cTID('A   '), 81.52);
-    desc3.putDouble(cTID('B   '), 48.93);
-    desc1.putObject(cTID('Mxm '), cTID('LbCl'), desc3);
-    desc1.putInteger(sTID("colorModel"), 0);
-    executeAction(sTID('colorRange'), desc1, DialogModes.NO);
-};
-
-function reduceBGcomplexity() {
-    var desc1 = new ActionDescriptor();
-    desc1.putInteger(cTID('Fzns'), 35);
-    var desc2 = new ActionDescriptor();
-    desc2.putDouble(cTID('Lmnc'), 97.28);
-    desc2.putDouble(cTID('A   '), -3.13);
-    desc2.putDouble(cTID('B   '), 0.59);
-    desc1.putObject(cTID('Mnm '), cTID('LbCl'), desc2);
-    var desc3 = new ActionDescriptor();
-    desc3.putDouble(cTID('Lmnc'), 99.96);
-    desc3.putDouble(cTID('A   '), 0.61);
-    desc3.putDouble(cTID('B   '), 7.07);
-    desc1.putObject(cTID('Mxm '), cTID('LbCl'), desc3);
-    desc1.putInteger(sTID("colorModel"), 0);
-    executeAction(sTID('colorRange'), desc1, DialogModes.NO);
 };
 
 // Set
@@ -1058,10 +957,10 @@ function createRedOutlineForDespecle(layerName) {
     desc2.putObject(cTID('FrFX'), cTID('FrFX'), desc3);
     desc1.putObject(cTID('T   '), cTID('Lefx'), desc2);
     executeAction(cTID('setd'), desc1, DialogModes.NO);
-  };
+};
 
-  // Hide
-  function hideRedOutlineForDespecle(layerName) {
+// Hide
+function hideRedOutlineForDespecle(layerName) {
     var desc1 = new ActionDescriptor();
     var list1 = new ActionList();
     var ref1 = new ActionReference();
@@ -1070,10 +969,10 @@ function createRedOutlineForDespecle(layerName) {
     list1.putReference(ref1);
     desc1.putList(cTID('null'), list1);
     executeAction(cTID('Hd  '), desc1, DialogModes.NO);
-  };
+};
 
 //aplikuje layer comp na smart object podle jména. když nenajde, tak neudělá nic.
-function setSmartObjLayerCompByName(name) {
+function setSmartObjLayerCompByName(layerCompName) {
 
     var theCompsList = [];
     var ref = new ActionReference();
@@ -1094,8 +993,8 @@ function setSmartObjLayerCompByName(name) {
             };
         };
         //its a little dirty to use the name as object attr key - but it works for now.
-        if (theSOComps[name]) {
-            setSmartObjLayerCompById(theSOComps[name]);
+        if (theSOComps[layerCompName]) {
+            setSmartObjLayerCompById(theSOComps[layerCompName]);
         }
         return;
     };
@@ -1176,8 +1075,16 @@ function checkIfAnyPalleteIsVisible() {
     return isVisible;
 };
 
-function showPalettes(showBoolean) {
-    if(showBoolean) {
+function hidePalettes() {
+    setShowPalettes(false);
+}
+
+function showPalettes() {
+    setShowPalettes(true);
+}
+
+function setShowPalettes(showBoolean) {
+    if (showBoolean) {
         if (!checkIfAnyPalleteIsVisible()) {
             app.togglePalettes();
         }
@@ -1188,16 +1095,16 @@ function showPalettes(showBoolean) {
     }
 }
 
-function GetFilesFromBridge() {
+function getFilesFromBridge() {
     var fileList;
     if (BridgeTalk.isRunning("bridge")) {
         var bt = new BridgeTalk();
         bt.target = "bridge";
         bt.body = "var theFiles = photoshop.getBridgeFileListForAutomateCommand();theFiles.toSource();";
-        bt.onResult = function(inBT) {
+        bt.onResult = function (inBT) {
             fileList = eval(inBT.body);
         }
-        bt.onError = function(inBT) {
+        bt.onError = function (inBT) {
             fileList = new Array();
         }
         bt.send();
@@ -1216,31 +1123,3 @@ function GetFilesFromBridge() {
     }
     return fileList;
 }
-
-
-
-// if (app.documents.length > 0) {
-//     var ref = new ActionReference();
-//     ref.putEnumerated(charIDToTypeID("Lyr "), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"));
-//     var layerDesc = executeActionGet(ref);
-//     if (layerDesc.hasKey(stringIDToTypeID("smartObject")) == true) {
-//         var theSO = layerDesc.getObjectValue(stringIDToTypeID("smartObject"));
-//         var x = theSO.getList(stringIDToTypeID("compsList"));
-//         var theCompsList = theSO.getObjectValue(stringIDToTypeID("compsList"));
-//         if (theCompsList.count > 2) {
-//             var theCompsList = theCompsList.getList(stringIDToTypeID("compList"));
-//             var theSOComps = new Array;
-//             for (var m = 0; m < theCompsList.count; m++) {
-//                 var thisOne = theCompsList.getObjectValue(m);
-//                 var theName = thisOne.getString(stringIDToTypeID("name"));
-//                 var theID = thisOne.getInteger(stringIDToTypeID("ID"));
-//                 var theComment = thisOne.getString(stringIDToTypeID("comment"));
-//                 theSOComps.push([theName, theID, theComment])
-//             };
-//             var theSOMore = layerDesc.getObjectValue(stringIDToTypeID("smartObjectMore"));
-//             var appliedComp = theSOMore.getInteger(stringIDToTypeID("comp"));
-//             alert("the comps\n" + theSOComps.join("\n"));
-//             alert(appliedComp);
-//         };
-//     };
-// };

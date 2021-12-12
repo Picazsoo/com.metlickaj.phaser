@@ -3,6 +3,14 @@
 
 var transformSettings;
 
+var saveOptions = new PhotoshopSaveOptions;
+saveOptions.alphaChannels = true;
+saveOptions.annotations = true;
+saveOptions.embedColorProfile = true;
+saveOptions.layers = true;
+saveOptions.spotColors = true;
+
+//Layer names used in project
 var lr = {
     DIRY: "diry",
     LINKA_PRO_VYBARVOVANI: "LINKA pro vybarvovani",
@@ -22,57 +30,81 @@ var lr = {
     LAYER5: "Layer 5"
 }
 
+//Color ranges settings for color range method
+var rn = {
+    LINKA: {
+        fuzziness: 172,
+        min: { luminance: 12.25, a: 0, b: 0 },
+        max: { luminance: 12.25, a: 0, b: 0 }
+    },
+    WHITE_BACKGROUND: {
+        fuzziness: 35,
+        min: { luminance: 97.28, a: -3.13, b: 0.59 },
+        max: { luminance: 99.96, a: 0.61, b: 7.07 }
+    },
+    PINK_OUTLINES: {
+        fuzziness: 39, 
+        min: { luminance: 58.47, a: 87.95, b: -36.21 },
+        max: { luminance: 58.47, a: 87.95, b: -36.21 }
+    },
+    HOLE_OLD_SCANNER: {
+        fuzziness: 0,
+        min: { luminance: 63.97, a: -59.22, b: 0.32 },
+        max: { luminance: 85.8, a: -15.69, b: 12.7 }
+    },
+    HOLE_NEW_SCANNER: {
+        fuzziness: 70,
+        min: { luminance: 92.23, a: -29.87, b: -1.63 },
+        max: { luminance: 93.96, a: -27.04, b: 0.69 }
+    },
+    SHADOW_MANUAL_OLD: {
+        fuzziness: 95,
+        min: { luminance: 35.28, a: 54.38, b: -18.04 },
+        max: { luminance: 66.13, a: 81.52, b: 48.93 }
+    }
+}
+
 function loadFiles(source) {
     var files = [];
     if (source === 'bridge') {
-        files = GetFilesFromBridge();
+        files = getFilesFromBridge();
     } else {
         files = openDialog();
     }
     var filesWithPaths = [];
-    for (var i = 0; i < files.length; i++) {
-        var filePath = files[i].toString();
+    files.forEach(function (file) {
+        var filePath = file.toString();
         filesWithPaths.push({
             fileName: filePath.substring(filePath.lastIndexOf("/") + 1),
             path: filePath
         });
-    }
+    })
     return JSON.lave(filesWithPaths);
 }
 
 function batchProcessTiffsToPSDs(transformSettings, filePaths) {
-    showPalettes(false)
-    var saveOptions = new PhotoshopSaveOptions;
-    saveOptions.alphaChannels = true;
-    saveOptions.annotations = true;
-    saveOptions.embedColorProfile = true;
-    saveOptions.layers = true;
-    saveOptions.spotColors = true;
-
-    var numOfFiles = filePaths.length;
-    for (i = 0; i < numOfFiles; i++) {
-        var docRef = open(File(filePaths[i]));
-        var docRefPath = app.activeDocument.fullName.toString();
-        ProcessTIFsToStraightenedPSDs(transformSettings);
-        var docRefPathPSD = docRefPath.substring(0, docRefPath.lastIndexOf(".")) + ".psd";
-        docRef.saveAs(new File(docRefPathPSD), saveOptions);
-        docRef.close(SaveOptions.DONOTSAVECHANGES);
+    try {
+        hidePalettes();
+        filePaths.forEach(function (filePath) {
+            var docRef = open(File(filePath));
+            var docRefPath = app.activeDocument.fullName.toString();
+            processTIFsToStraightenedPSDs(transformSettings);
+            var docRefPathPSD = docRefPath.substring(0, docRefPath.lastIndexOf(".")) + ".psd";
+            docRef.saveAs(new File(docRefPathPSD), saveOptions);
+            docRef.close(SaveOptions.DONOTSAVECHANGES);
+        });
+        showPalettes();
+    } catch (error) {
+        alert(error);
+        showPalettes();
     }
-    showPalettes(true)
+
 }
 
-function fixWellDefinedHoles(transformSettings) {
-    showPalettes(false)
-    var saveOptions = new PhotoshopSaveOptions;
-    saveOptions.alphaChannels = true;
-    saveOptions.annotations = true;
-    saveOptions.embedColorProfile = true;
-    saveOptions.layers = true;
-    saveOptions.spotColors = true;
-    var docRef = app.activeDocument;
+function fixBrokenHoles(transformSettings) {
+    hidePalettes()
     fixBadHoles(transformSettings);
-    //docRef.close(SaveOptions.SAVECHANGES);
-    showPalettes(true)
+    showPalettes()
 }
 
 function fixBadHoles(transformSettings) {
@@ -85,22 +117,22 @@ function fixBadHoles(transformSettings) {
         left: idealPointsCenters.left,
         right: idealPointsCenters.right
     }
-    
+
     var leftMarquee = {};
     var rightMarquee = {};
     leftMarquee.top = 0;
     leftMarquee.left = 0;
-    leftMarquee.right = Math.floor(app.activeDocument.width/2);
+    leftMarquee.right = Math.floor(app.activeDocument.width / 2);
     leftMarquee.bottom = 370;
 
     rightMarquee.top = 0;
-    rightMarquee.left = Math.floor(app.activeDocument.width/2);
+    rightMarquee.left = Math.floor(app.activeDocument.width / 2);
     rightMarquee.right = app.activeDocument.width;
     rightMarquee.bottom = 370;
 
     selectLayers(DIRY);
-    squareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom);
-    colorRangePinkHoles();
+    squareMarquee(leftMarquee);
+    colorRange(rn.PINK_OUTLINES);
 
     var scannedPoints = {
         left: {},
@@ -111,15 +143,15 @@ function fixBadHoles(transformSettings) {
     scannedPoints.left.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
     deselectMarque(); //Zrušení marquee
 
-    squareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom);
-    colorRangePinkHoles();
+    squareMarquee(rightMarquee);
+    colorRange(rn.PINK_OUTLINES);
     // VÝPOČET STŘEDU PRAVÉ DÍRY
     scannedPoints.right.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
     scannedPoints.right.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
 
 
-    
-    selectLayersFromTo(SVETLO,BILA);
+
+    selectLayersFromTo(SVETLO, BILA);
     modifyLayersLock(false);
 
     var deltaX = scannedPoints.right.x - scannedPoints.left.x; //Výpočet obdélníku tvořeného dírami
@@ -142,7 +174,7 @@ function fixBadHoles(transformSettings) {
 
 }
 
-function ProcessTIFsToStraightenedPSDs(transformSettings) {
+function processTIFsToStraightenedPSDs(transformSettings) {
 
     var idealPointsCenters = transformSettings.idealPointsCenters;
     var marquees = transformSettings.marquees;
@@ -159,18 +191,18 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     //==================== VOJTA - LINKA 2018 - oba rozmery (07.03.2019) ==============
 
     //rotate if is in portrait mode
-    if(app.activeDocument.width.as("px") < app.activeDocument.height.as("px")) {
+    if (app.activeDocument.width.as("px") < app.activeDocument.height.as("px")) {
         rotateInDegrees(90);
     }
     setCanvasSize(2480); // Canvas Size
     resetSwatches();
     switchSwatch();
-    reduceBGcomplexity();
+    colorRange(rn.WHITE_BACKGROUND); // Reduce background complexity
     fillWithFGColor();
     deselectMarque();
     copyLayer(lr.BACKGROUND, lr.LAYER1); // Layer Via Copy
     desaturate(); // Desaturate
-    step4(); // Color Range
+    colorRange(rn.LINKA); // Color Range
     copyLayer(lr.LAYER1, lr.LAYER2); // Layer Via Copy
     newLayer(lr.LAYER3); // Make
     resetSwatches(); // Reset
@@ -180,13 +212,13 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     selectLayers(lr.LAYER3); // Select
     makeMask(); // Make
     copyLayer(lr.LAYER3, lr.LAYER4); // Layer Via Copy
-    selectLayersFromTo(lr.LAYER4,lr.LAYER2); // Select
+    selectLayersFromTo(lr.LAYER4, lr.LAYER2); // Select
     mergeSelectedLayers(); // Merge Layers
     renameLayerFromTo(null, lr.LINKA); // Set
     setMarqueByTransparency(); // Set
     refineEdge(); // Refine Edge
-    copyLayer(lr.LINKA, lr.LAYER5); // Layer Via Copy
-    renameLayerFromTo(lr.LAYER5, lr.LINKA_PRO_VYBARVOVANI); // Set
+    copyLayer(lr.LINKA, lr.LINKA_PRO_VYBARVOVANI); // Layer Via Copy
+    //renameLayerFromTo(lr.LAYER5, lr.LINKA_PRO_VYBARVOVANI); // Set
     setVisibilityByLayersName(false, lr.LINKA);
     selectLayers(lr.LAYER1); // Select
     setMarqueByTransparency(); // Set
@@ -195,7 +227,7 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     renameLayerFromTo(lr.LAYER1, lr.BILA); // Set
     newLayer(lr.BARVA); // Make
     selectLayers(lr.BACKGROUND); // Select
-    squareSelection(0, 0, 3918, 330); // Set
+    squareMarquee([0, 0, 3918, 330]); // Set
     copyLayer(lr.BACKGROUND, lr.DIRY); // Layer Via Copy
     moveLayerTo(6); // Move
     setVisibilityByLayersName(false, lr.BACKGROUND);
@@ -225,17 +257,17 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     selectLayers(lr.BARVA); // Select
 
     //rovnani!
-    RulerHorizontal(idealPoints.left.y); //přídá pravítko
-    JachRulerVrtc(idealPoints.left.x); //přídá pravítko
-    JachRulerVrtc(idealPoints.right.x); //přídá pravítko
+    addHorizontalRuler(idealPoints.left.y); //přídá pravítko
+    addVerticalRuler(idealPoints.left.x); //přídá pravítko
+    addVerticalRuler(idealPoints.right.x); //přídá pravítko
     selectLayers(lr.DIRY); //Výběr děr
-    squareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom); // Marquee na levou díru
-    JachDiraColorRange(); // Marquee výběr kontury díry
+    squareMarquee(leftMarquee); // Marquee na levou díru
+    colorRange(rn.HOLE_NEW_SCANNER); // Marquee výběr kontury díry
     ExpandMarquee(4, false)
-    StrokeAroundSelection(4);
+    strokeAroundMarquee(4);
     deselectMarque(); //Zrušení marquee
-    squareSelection(leftMarquee.left, leftMarquee.top, leftMarquee.right, leftMarquee.bottom); // Marquee na levou díru
-    colorRangePinkHoles();
+    squareMarquee(leftMarquee); // Marquee na levou díru
+    colorRange(rn.PINK_OUTLINES);
 
     //Zde se může odehrát kontrola správnosti výběru díry
 
@@ -248,18 +280,16 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     scannedPoints.left.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
 
 
-    //todo: Mel bych tady vybrat ostre tu ruzovou barvu a z ni delat stred - ted ho delam moc brzo
-
     deselectMarque(); //Zrušení marquee
-    squareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom); //Marquee na pravou díru
-    JachDiraColorRange(); // Marquee výběr kontury díry
+    squareMarquee(rightMarquee); //Marquee na pravou díru
+    colorRange(rn.HOLE_NEW_SCANNER); // Marquee výběr kontury díry
 
     ExpandMarquee(4, false)
-    StrokeAroundSelection(4);
+    strokeAroundMarquee(4);
     deselectMarque(); //Zrušení marquee
-    squareSelection(rightMarquee.left, rightMarquee.top, rightMarquee.right, rightMarquee.bottom); //Marquee na pravou díru
-    colorRangePinkHoles();
-    
+    squareMarquee(rightMarquee); //Marquee na pravou díru
+    colorRange(rn.PINK_OUTLINES);
+
     // VÝPOČET STŘEDU PRAVÉ DÍRY
     scannedPoints.right.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
     scannedPoints.right.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
@@ -308,7 +338,7 @@ function ProcessTIFsToStraightenedPSDs(transformSettings) {
     setColorOverlay(0, 0, 255, 100, lr.SVETLO);      // Set
     setColorOverlay(255, 0, 0, 100, lr.STIN);      // Set
     opacityToPercent(60, lr.STIN);      // Set    // Hide
-    setVisibilityByLayersName(false, [ lr.BARVA, lr.LINKA_BARVA]);      // Hide
+    setVisibilityByLayersName(false, [lr.BARVA, lr.LINKA_BARVA]);      // Hide
     createLayerComp("pavel-stinovani", "pro shadower");      // Make
     setVisibilityByLayersName(false, [lr.SVETLO, lr.STIN]);
     createLayerComp("stinovana-faze", "aktualne stinovana faze");      // Make
