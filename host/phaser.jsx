@@ -1,5 +1,4 @@
-﻿//@include "./jachym-library.jsx"
-//@include "./json.jsx"
+﻿//@include "../../common_library/photoshop_library.jsx"
 
 var transformSettings;
 
@@ -158,7 +157,7 @@ function fixBadHoles(transformSettings) {
     var deltaY = scannedPoints.right.y - scannedPoints.left.y;
     var scannedPrepona = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
     var angle = -1 * Math.atan(deltaY / deltaX) * 180 / Math.PI; //Výpočet úhlu pro narovnání skew
-    JachRotateAroundPosition(angle, scannedPoints.left.x, scannedPoints.left.y); //Otočení pro narovnání
+    rotateAroundPoint(angle, scannedPoints.left.x, scannedPoints.left.y); //Otočení pro narovnání
 
     //spocitam o kolik posunout pro napozicovani na idealni levy malybod
     var posunX = idealPoints.left.x - scannedPoints.left.x;
@@ -170,7 +169,7 @@ function fixBadHoles(transformSettings) {
 
     //spocitam o kolik roztahnout obraz (se stredem roztazeni na malem bode)
     var percentScale = (idealPoints.right.x - idealPoints.left.x) / (scannedPoints.right.x - idealPoints.left.x) * 100;
-    jachHorizontalTransform(percentScale, idealPoints.left.x, idealPoints.left.y);
+    horizontallyTransformAroundPoint(percentScale, idealPoints.left.x, idealPoints.left.y);
 
 }
 
@@ -235,14 +234,14 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     selectLayers(lr.BACKGROUND); // Select
     copyLayer(lr.BACKGROUND, lr.LINKA_TEXTURE); // Layer Via Copy
     moveLayerTo(5); // Move
-    CreateClippingMask(); // Create Clipping Mask
+    createClippingMask(); // Create Clipping Mask
     setVisibilityByLayersName(true, lr.LINKA_TEXTURE);
-    HueSaturationLightness(0, -100, -20); // Hue/Saturation
+    hueSaturationLightness(0, -100, -20); // Hue/Saturation
     LayerBlendStyle(); // Set
     newLayer(lr.LINKA_BARVA); // Make
-    CreateClippingMask(); // Create Clipping Mask
+    createClippingMask(); // Create Clipping Mask
     SelectAllLayers(); // Select All Layers
-    MakeGroupFromSelection(); // Make
+    makeGroupFromSelection(); // Make
     renameLayerFromTo(null, lr.VRSTVY); // Set
     newLayer(lr.STIN); // Make
     eSTINBlending();
@@ -263,7 +262,7 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     selectLayers(lr.DIRY); //Výběr děr
     squareMarquee(leftMarquee); // Marquee na levou díru
     colorRange(rn.HOLE_NEW_SCANNER); // Marquee výběr kontury díry
-    ExpandMarquee(4, false)
+    expandMarquee(4, false)
     strokeAroundMarquee(4);
     deselectMarque(); //Zrušení marquee
     squareMarquee(leftMarquee); // Marquee na levou díru
@@ -284,7 +283,7 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     squareMarquee(rightMarquee); //Marquee na pravou díru
     colorRange(rn.HOLE_NEW_SCANNER); // Marquee výběr kontury díry
 
-    ExpandMarquee(4, false)
+    expandMarquee(4, false)
     strokeAroundMarquee(4);
     deselectMarque(); //Zrušení marquee
     squareMarquee(rightMarquee); //Marquee na pravou díru
@@ -305,7 +304,7 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     var deltaY = scannedPoints.right.y - scannedPoints.left.y;
     var scannedPrepona = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
     var angle = -1 * Math.atan(deltaY / deltaX) * 180 / Math.PI; //Výpočet úhlu pro narovnání skew
-    JachRotateAroundPosition(angle, scannedPoints.left.x, scannedPoints.left.y); //Otočení pro narovnání
+    rotateAroundPoint(angle, scannedPoints.left.x, scannedPoints.left.y); //Otočení pro narovnání
 
     //spocitam o kolik posunout pro napozicovani na idealni levy malybod
     var posunX = idealPoints.left.x - scannedPoints.left.x;
@@ -317,7 +316,7 @@ function processTIFsToStraightenedPSDs(transformSettings) {
 
     //spocitam o kolik roztahnout obraz (se stredem roztazeni na malem bode)
     var percentScale = (idealPoints.right.x - idealPoints.left.x) / (scannedPoints.right.x - idealPoints.left.x) * 100;
-    jachHorizontalTransform(percentScale, idealPoints.left.x, idealPoints.left.y);
+    horizontallyTransformAroundPoint(percentScale, idealPoints.left.x, idealPoints.left.y);
 
     modifyLayersLock(true, [lr.DIRY, lr.LINKA_PRO_VYBARVOVANI, lr.LINKA, lr.BILA]);
     modifyLayersLock(false, lr.LINKA_BARVA);
