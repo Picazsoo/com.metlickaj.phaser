@@ -31,13 +31,26 @@ select#files-for-processing {
     color: #d8d8d8;
 	padding: 5px;
 	width: 100%;
+	margin-top: 5px;
 }
 
-#container button {
+#container button:not(.topcoat-button-bar__button) {
 	margin: 5px 10px 5px 0;
+}
+
+.topcoat-button-bar__button {
+	width: 100%;
+}
+.topcoat-button-bar {
+	width: 100%;
 }
 
 option {
 	direction: rtl;
 	font-size: small;
+}
+
+.tab-content {
+	position: absolute;
+	width: 95%;
 }

@@ -1,7 +1,5 @@
 ﻿//@include "../../common_library/photoshop_library.jsx"
 
-var transformSettings;
-
 var saveOptions = new PhotoshopSaveOptions;
 saveOptions.alphaChannels = true;
 saveOptions.annotations = true;
@@ -29,6 +27,15 @@ var lr = {
     LAYER5: "Layer 5"
 }
 
+var color = {
+    WHITE: rgbColorFactory(255, 255, 255),
+    BLACK: rgbColorFactory(0, 0, 0),
+    PINK_OUTLINES: rgbColorFactory(255, 0, 204),
+    RED: rgbColorFactory(255, 0, 0),
+    GREEN: rgbColorFactory(0, 255, 0),
+    BLUE: rgbColorFactory(0, 0, 255)
+};
+
 //Color ranges settings for color range method
 var rn = {
     LINKA: {
@@ -42,7 +49,7 @@ var rn = {
         max: { luminance: 99.96, a: 0.61, b: 7.07 }
     },
     PINK_OUTLINES: {
-        fuzziness: 39, 
+        fuzziness: 39,
         min: { luminance: 58.47, a: 87.95, b: -36.21 },
         max: { luminance: 58.47, a: 87.95, b: -36.21 }
     },
@@ -101,111 +108,79 @@ function batchProcessTiffsToPSDs(transformSettings, filePaths) {
 }
 
 function fixBrokenHoles(transformSettings) {
-    hidePalettes()
-    fixBadHoles(transformSettings);
-    showPalettes()
-}
+    try {
+        hidePalettes()
+        var idealPointsCenters = transformSettings.idealPointsCenters;
 
-function fixBadHoles(transformSettings) {
+        //Promenne - idealni stredy der a realne stredy der:
+        var idealPoints = {
+            left: idealPointsCenters.left,
+            right: idealPointsCenters.right
+        }
 
-    var idealPointsCenters = transformSettings.idealPointsCenters;
-    var marquees = transformSettings.marquees;
+        var leftMarquee = {};
+        var rightMarquee = {};
+        leftMarquee.top = 0;
+        leftMarquee.left = 0;
+        leftMarquee.right = Math.floor(app.activeDocument.width / 2);
+        leftMarquee.bottom = 370;
 
-    //Promenne - idealni stredy der a realne stredy der:
-    var idealPoints = {
-        left: idealPointsCenters.left,
-        right: idealPointsCenters.right
+        rightMarquee.top = 0;
+        rightMarquee.left = Math.floor(app.activeDocument.width / 2);
+        rightMarquee.right = app.activeDocument.width;
+        rightMarquee.bottom = 370;
+
+        selectLayers(DIRY);
+        var scannedPoints = {};
+        colorRangeWithinBounds(rn.PINK_OUTLINES, leftMarquee);
+        // VÝPOČET STŘEDU LEVÉ DÍRY
+        scannedPoints.left = getCenterFromSelection(app.activeDocument.selection.bounds);
+
+        colorRangeWithinBounds(rn.PINK_OUTLINES, rightMarquee);
+        // VÝPOČET STŘEDU PRAVÉ DÍRY
+        scannedPoints.right = getCenterFromSelection(app.activeDocument.selection.bounds);
+
+
+        selectLayersFromTo(SVETLO, BILA);
+        modifyLayersLock(false);
+
+        var deltaX = scannedPoints.right.x - scannedPoints.left.x; //Výpočet obdélníku tvořeného dírami
+        var deltaY = scannedPoints.right.y - scannedPoints.left.y;
+        var scannedPrepona = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
+        var angle = -1 * Math.atan(deltaY / deltaX) * 180 / Math.PI; //Výpočet úhlu pro narovnání skew
+        rotateAroundPoint(angle, scannedPoints.left.x, scannedPoints.left.y); //Otočení pro narovnání
+
+        //spocitam o kolik posunout pro napozicovani na idealni levy malybod
+        var posunX = idealPoints.left.x - scannedPoints.left.x;
+        var posunY = idealPoints.left.y - scannedPoints.left.y;
+        moveLayerPixels(posunX, posunY);
+
+        //Spocitam novou polohu naskenovaneho praveho bodu po rotaci a posunu
+        scannedPoints.right.x = scannedPoints.right.x + (scannedPrepona - deltaX) + posunX;
+
+        //spocitam o kolik roztahnout obraz (se stredem roztazeni na malem bode)
+        var percentScale = (idealPoints.right.x - idealPoints.left.x) / (scannedPoints.right.x - idealPoints.left.x) * 100;
+        horizontallyTransformAroundPoint(percentScale, idealPoints.left.x, idealPoints.left.y);
+        showPalettes();
+    } catch (error) {
+        alert(error);
+        showPalettes();
     }
-
-    var leftMarquee = {};
-    var rightMarquee = {};
-    leftMarquee.top = 0;
-    leftMarquee.left = 0;
-    leftMarquee.right = Math.floor(app.activeDocument.width / 2);
-    leftMarquee.bottom = 370;
-
-    rightMarquee.top = 0;
-    rightMarquee.left = Math.floor(app.activeDocument.width / 2);
-    rightMarquee.right = app.activeDocument.width;
-    rightMarquee.bottom = 370;
-
-    selectLayers(DIRY);
-    squareMarquee(leftMarquee);
-    colorRange(rn.PINK_OUTLINES);
-
-    var scannedPoints = {
-        left: {},
-        right: {}
-    };
-    // VÝPOČET STŘEDU LEVÉ DÍRY
-    scannedPoints.left.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
-    scannedPoints.left.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
-    deselectMarque(); //Zrušení marquee
-
-    squareMarquee(rightMarquee);
-    colorRange(rn.PINK_OUTLINES);
-    // VÝPOČET STŘEDU PRAVÉ DÍRY
-    scannedPoints.right.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
-    scannedPoints.right.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
-
-
-
-    selectLayersFromTo(SVETLO, BILA);
-    modifyLayersLock(false);
-
-    var deltaX = scannedPoints.right.x - scannedPoints.left.x; //Výpočet obdélníku tvořeného dírami
-    var deltaY = scannedPoints.right.y - scannedPoints.left.y;
-    var scannedPrepona = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
-    var angle = -1 * Math.atan(deltaY / deltaX) * 180 / Math.PI; //Výpočet úhlu pro narovnání skew
-    rotateAroundPoint(angle, scannedPoints.left.x, scannedPoints.left.y); //Otočení pro narovnání
-
-    //spocitam o kolik posunout pro napozicovani na idealni levy malybod
-    var posunX = idealPoints.left.x - scannedPoints.left.x;
-    var posunY = idealPoints.left.y - scannedPoints.left.y;
-    moveLayerPixels(posunX, posunY);
-
-    //Spocitam novou polohu naskenovaneho praveho bodu po rotaci a posunu
-    scannedPoints.right.x = scannedPoints.right.x + (scannedPrepona - deltaX) + posunX;
-
-    //spocitam o kolik roztahnout obraz (se stredem roztazeni na malem bode)
-    var percentScale = (idealPoints.right.x - idealPoints.left.x) / (scannedPoints.right.x - idealPoints.left.x) * 100;
-    horizontallyTransformAroundPoint(percentScale, idealPoints.left.x, idealPoints.left.y);
-
 }
 
 function processTIFsToStraightenedPSDs(transformSettings) {
-
-    var idealPointsCenters = transformSettings.idealPointsCenters;
-    var marquees = transformSettings.marquees;
-
-    //Promenne - idealni stredy der a realne stredy der:
-    var idealPoints = {
-        left: idealPointsCenters.left,
-        right: idealPointsCenters.right
-    }
-
-    var leftMarquee = marquees.left;
-    var rightMarquee = marquees.right;
-
-    //==================== VOJTA - LINKA 2018 - oba rozmery (07.03.2019) ==============
-
     //rotate if is in portrait mode
-    if (app.activeDocument.width.as("px") < app.activeDocument.height.as("px")) {
-        rotateInDegrees(90);
-    }
+    clockwiseToLandscape();
     setCanvasSize(2480); // Canvas Size
-    resetSwatches();
-    switchSwatch();
     colorRange(rn.WHITE_BACKGROUND); // Reduce background complexity
-    fillWithFGColor();
+    fillWithRGBColor(color.WHITE);
     deselectMarque();
     copyLayer(lr.BACKGROUND, lr.LAYER1); // Layer Via Copy
     desaturate(); // Desaturate
     colorRange(rn.LINKA); // Color Range
     copyLayer(lr.LAYER1, lr.LAYER2); // Layer Via Copy
     newLayer(lr.LAYER3); // Make
-    resetSwatches(); // Reset
-    fillColor(); // Fill
+    fillWithRGBColor(color.BLACK);
     selectLayers(lr.LAYER2); // Select
     setMarqueByTransparency(); // Set
     selectLayers(lr.LAYER3); // Select
@@ -213,24 +188,21 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     copyLayer(lr.LAYER3, lr.LAYER4); // Layer Via Copy
     selectLayersFromTo(lr.LAYER4, lr.LAYER2); // Select
     mergeSelectedLayers(); // Merge Layers
-    renameLayerFromTo(null, lr.LINKA); // Set
+    renameCurrentLayerTo(lr.LINKA); // Set
     setMarqueByTransparency(); // Set
     refineEdge(); // Refine Edge
     copyLayer(lr.LINKA, lr.LINKA_PRO_VYBARVOVANI); // Layer Via Copy
-    //renameLayerFromTo(lr.LAYER5, lr.LINKA_PRO_VYBARVOVANI); // Set
     setVisibilityByLayersName(false, lr.LINKA);
     selectLayers(lr.LAYER1); // Select
     setMarqueByTransparency(); // Set
-    switchSwatch(); // Exchange
-    fillWithFGColor(); // Fill
+    fillWithRGBColor(color.WHITE); // Fill
     renameLayerFromTo(lr.LAYER1, lr.BILA); // Set
     newLayer(lr.BARVA); // Make
     selectLayers(lr.BACKGROUND); // Select
     squareMarquee([0, 0, 3918, 330]); // Set
     copyLayer(lr.BACKGROUND, lr.DIRY); // Layer Via Copy
     moveLayerTo(6); // Move
-    setVisibilityByLayersName(false, lr.BACKGROUND);
-    setVisibilityByLayersName(false, lr.BILA);
+    setVisibilityByLayersName(false, [lr.BACKGROUND, lr.BILA]);
     selectLayers(lr.BACKGROUND); // Select
     copyLayer(lr.BACKGROUND, lr.LINKA_TEXTURE); // Layer Via Copy
     moveLayerTo(5); // Move
@@ -242,7 +214,7 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     createClippingMask(); // Create Clipping Mask
     SelectAllLayers(); // Select All Layers
     makeGroupFromSelection(); // Make
-    renameLayerFromTo(null, lr.VRSTVY); // Set
+    renameCurrentLayerTo(lr.VRSTVY); // Set
     newLayer(lr.STIN); // Make
     eSTINBlending();
     newLayer(lr.SVETLO); // Make
@@ -256,17 +228,26 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     selectLayers(lr.BARVA); // Select
 
     //rovnani!
+    var idealPointsCenters = transformSettings.idealPointsCenters;
+    var marquees = transformSettings.marquees;
+
+    //Promenne - idealni stredy der a realne stredy der:
+    var idealPoints = {
+        left: idealPointsCenters.left,
+        right: idealPointsCenters.right
+    }
+
     addHorizontalRuler(idealPoints.left.y); //přídá pravítko
     addVerticalRuler(idealPoints.left.x); //přídá pravítko
     addVerticalRuler(idealPoints.right.x); //přídá pravítko
     selectLayers(lr.DIRY); //Výběr děr
-    squareMarquee(leftMarquee); // Marquee na levou díru
-    colorRange(rn.HOLE_NEW_SCANNER); // Marquee výběr kontury díry
+    // Marquee na levou díru
+    colorRangeWithinBounds(rn.HOLE_NEW_SCANNER, marquees.left); // Marquee výběr kontury díry
     expandMarquee(4, false)
-    strokeAroundMarquee(4);
-    deselectMarque(); //Zrušení marquee
-    squareMarquee(leftMarquee); // Marquee na levou díru
-    colorRange(rn.PINK_OUTLINES);
+    strokeAroundMarquee(4, color.PINK_OUTLINES);
+    //Zrušení marquee
+    // Marquee na levou díru
+    colorRangeWithinBounds(rn.PINK_OUTLINES, marquees.left);
 
     //Zde se může odehrát kontrola správnosti výběru díry
 
@@ -275,24 +256,21 @@ function processTIFsToStraightenedPSDs(transformSettings) {
         left: {},
         right: {}
     };
-    scannedPoints.left.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
-    scannedPoints.left.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
+    scannedPoints.left = getCenterFromSelection(app.activeDocument.selection.bounds);
 
-
-    deselectMarque(); //Zrušení marquee
-    squareMarquee(rightMarquee); //Marquee na pravou díru
-    colorRange(rn.HOLE_NEW_SCANNER); // Marquee výběr kontury díry
+    //Zrušení marquee
+    //Marquee na pravou díru
+    // Marquee výběr kontury díry
+    colorRangeWithinBounds(rn.HOLE_NEW_SCANNER, marquees.right);
 
     expandMarquee(4, false)
-    strokeAroundMarquee(4);
-    deselectMarque(); //Zrušení marquee
-    squareMarquee(rightMarquee); //Marquee na pravou díru
-    colorRange(rn.PINK_OUTLINES);
+    strokeAroundMarquee(4, color.PINK_OUTLINES);
+    //Zrušení marquee
+    //Marquee na pravou díru
+    colorRangeWithinBounds(rn.PINK_OUTLINES, marquees.right);
 
     // VÝPOČET STŘEDU PRAVÉ DÍRY
-    scannedPoints.right.x = (Number((app.activeDocument.selection.bounds[2].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[0].toString().replace(" px", "")))) / 2;
-    scannedPoints.right.y = (Number((app.activeDocument.selection.bounds[3].toString().replace(" px", ""))) + Number((app.activeDocument.selection.bounds[1].toString().replace(" px", "")))) / 2;
-
+    scannedPoints.right = getCenterFromSelection(app.activeDocument.selection.bounds);
 
     deselectMarque(); //Zrušení marquee
 
@@ -307,16 +285,16 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     rotateAroundPoint(angle, scannedPoints.left.x, scannedPoints.left.y); //Otočení pro narovnání
 
     //spocitam o kolik posunout pro napozicovani na idealni levy malybod
-    var posunX = idealPoints.left.x - scannedPoints.left.x;
-    var posunY = idealPoints.left.y - scannedPoints.left.y;
-    moveLayerPixels(posunX, posunY);
+    var xAxisShift = idealPoints.left.x - scannedPoints.left.x;
+    var yAxisShift = idealPoints.left.y - scannedPoints.left.y;
+    moveLayerPixels(xAxisShift, yAxisShift);
 
     //Spocitam novou polohu naskenovaneho praveho bodu po rotaci a posunu
-    scannedPoints.right.x = scannedPoints.right.x + (scannedPrepona - deltaX) + posunX;
+    scannedPoints.right.x = scannedPoints.right.x + (scannedPrepona - deltaX) + xAxisShift;
 
     //spocitam o kolik roztahnout obraz (se stredem roztazeni na malem bode)
-    var percentScale = (idealPoints.right.x - idealPoints.left.x) / (scannedPoints.right.x - idealPoints.left.x) * 100;
-    horizontallyTransformAroundPoint(percentScale, idealPoints.left.x, idealPoints.left.y);
+    var horizontalPercentScale = (idealPoints.right.x - idealPoints.left.x) / (scannedPoints.right.x - idealPoints.left.x) * 100;
+    horizontallyTransformAroundPoint(horizontalPercentScale, idealPoints.left.x, idealPoints.left.y);
 
     modifyLayersLock(true, [lr.DIRY, lr.LINKA_PRO_VYBARVOVANI, lr.LINKA, lr.BILA]);
     modifyLayersLock(false, lr.LINKA_BARVA);
@@ -325,17 +303,17 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     createLayerComp("vojta-kyblik", "pro vylevani apod");
 
     opacityToPercent(30, lr.SVETLO);      // Set
-    setColorOverlay(255, 255, 255, 100, lr.SVETLO);      // Set
+    setColorOverlay(color.WHITE, 100, lr.SVETLO);      // Set
     opacityToPercent(30, lr.STIN);      // Set
-    setColorOverlay(0, 0, 0, 100, lr.SVETLO);      // Set
+    setColorOverlay(color.BLACK, 100, lr.STIN);      // Set
     setVisibilityByLayersName(false, lr.LINKA_PRO_VYBARVOVANI);      // Hide
     setVisibilityByLayersName(true, [lr.LINKA, lr.SVETLO, lr.STIN]);      // Hide
     selectLayers(lr.BARVA);      // Select
     createLayerComp("pavel-upravy", "pro bezne dodelavky");      // Make
 
     opacityToPercent(80, lr.SVETLO);      // Set
-    setColorOverlay(0, 0, 255, 100, lr.SVETLO);      // Set
-    setColorOverlay(255, 0, 0, 100, lr.STIN);      // Set
+    setColorOverlay(color.BLUE, 100, lr.SVETLO);      // Set
+    setColorOverlay(color.RED, 100, lr.STIN);      // Set
     opacityToPercent(60, lr.STIN);      // Set    // Hide
     setVisibilityByLayersName(false, [lr.BARVA, lr.LINKA_BARVA]);      // Hide
     createLayerComp("pavel-stinovani", "pro shadower");      // Make
@@ -343,16 +321,16 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     createLayerComp("stinovana-faze", "aktualne stinovana faze");      // Make
     setVisibilityByLayersName(true, [lr.SVETLO, lr.STIN, lr.LINKA_BARVA, lr.BARVA]);
     opacityToPercent(30, lr.SVETLO);      // Set
-    setColorOverlay(255, 255, 255, 100, lr.SVETLO);      // Set
+    setColorOverlay(color.WHITE, 100, lr.SVETLO);      // Set
     opacityToPercent(30, lr.STIN);      // Set
-    setColorOverlay(0, 0, 0, 100, lr.STIN);      // Set
+    setColorOverlay(color.BLACK, 100, lr.STIN);      // Set
     selectLayers(lr.BARVA);      // Select
     createLayerComp("jachym-final", "pro after effects!");
-    createRedOutlineForDespecle(lr.VRSTVY);
+    createOutlineForDespecle(color.RED, lr.VRSTVY);
     setVisibilityByLayersName(false, [lr.SVETLO, lr.STIN]);
     createLayerComp("jachym-despecle", "pro despeckle!");
     setVisibilityByLayersName(true, [lr.SVETLO, lr.STIN]);
-    hideRedOutlineForDespecle(lr.VRSTVY);
+    hideOutlineForDespecle(lr.VRSTVY);
     setVisibilityByLayersName(false, [lr.SVETLO, lr.STIN]);
     createLayerComp("jachym-imagej", "pro imageJ!");
     setVisibilityByLayersName(true, [lr.SVETLO, lr.STIN]);
@@ -361,8 +339,24 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     selectLayers(lr.BARVA);
 
     app.activeDocument.info.author = "Zpracovano";
+    var transformInformation = {};
+    transformInformation.xAxisShift = xAxisShift;
+    transformInformation.yAxisShift = yAxisShift;
+    transformInformation.rotationAngle = angle;
+    transformInformation.rotationPointCoords = scannedPoints.left;
+    transformInformation.idealPoints = idealPoints;
+    app.activeDocument.info.keywords = [JSON.lave(transformInformation)];
+}
 
-    transformSettings = "";
-    transformSettings = angle + "\r" + scannedPoints.left.x + "\r" + scannedPoints.left.y + "\r" + posunX + "\r" + posunY + "\r" + percentScale + "\r" + idealPoints.left.x + "\r" + idealPoints.left.y
-    app.activeDocument.info.keywords = [transformSettings];
+function getCenterFromSelection(selectionBounds) {
+    var x_coords = (getNumberFromSelectionBound(selectionBounds[2]) + getNumberFromSelectionBound(selectionBounds[0])) / 2;
+    var y_coords = (getNumberFromSelectionBound(selectionBounds[3]) + getNumberFromSelectionBound(selectionBounds[1])) / 2;
+    return {
+        x: x_coords,
+        y: y_coords
+    }
+}
+
+function getNumberFromSelectionBound(selectionBound) {
+    return Number((selectionBound.toString().replace(" px", "")));
 }

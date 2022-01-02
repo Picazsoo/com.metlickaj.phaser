@@ -26,6 +26,14 @@ $("#clear-cache").on("click", () => clearCache());
 $("#process-tiffs").on("click", () => processTiffsToPSDs());
 $("#fix-broken-holes").on("click", () => fixBrokenHoles());
 
+function openTab(event, idName) {
+    $(".tab-content").css('visibility', 'hidden');
+    $(`#${idName}`).css('visibility', 'visible');
+}
+
 $(window).on("ready", function(){
+    //activate tooltips
     $("[rel='tooltip']").tooltip();
+    //hide default options
+    openTab(null, 'phase-prepare');
       })

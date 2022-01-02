@@ -13,13 +13,38 @@
 <body>
 
   <div id="container">
-    <select id="files-for-processing" multiple size="5"></select>
-    <button id="load-files-bridge" class="topcoat-button" rel='tooltip' title="Načte soubory označené v Adobe Bridge">Načíst z Bridge</button>
-    <button id="load-files-explorer" class="topcoat-button" rel='tooltip' title="Otevře Průzkumník pro výběr souborů">Načíst z Průzkumníku</button>
-    <button id="process-tiffs" class="topcoat-button" rel='tooltip' title="Zpracuje soubory do .psd fází" disabled>Zpracovat fáze do .psd</button>
-    <button id="fix-broken-holes" class="topcoat-button" rel='tooltip' title="Opraví špatné díry">Oprav špatné díry</button>
-    <button id="restartExt" class="topcoat-button" rel='tooltip' title="Restartuje rozšíření">Restart Phaser</button>
+    <div class="topcoat-button-bar">
+      <div class="topcoat-button-bar__item">
+        <button class="topcoat-button-bar__button" onclick="openTab(event, 'phase-prepare')">Příprava fází</button>
+      </div>
+      <div class="topcoat-button-bar__item">
+        <button class="topcoat-button-bar__button" onclick="openTab(event, 'phase-repair')">Oprava fází</button>
+      </div>
+      <div class="topcoat-button-bar__item">
+        <button class="topcoat-button-bar__button" onclick="openTab(event, 'settings')">Nastavení</button>
+      </div>
+    </div>
+    <div class="tab-content" id="phase-prepare">
+      <select id="files-for-processing" multiple size="5"></select>
+      <button id="load-files-bridge" class="topcoat-button" rel='tooltip'
+        title="Načte soubory označené v Adobe Bridge">Načíst z Bridge</button>
+      <button id="load-files-explorer" class="topcoat-button" rel='tooltip'
+        title="Otevře Průzkumník pro výběr souborů">Načíst z Průzkumníku</button>
+      <button id="process-tiffs" class="topcoat-button" rel='tooltip' title="Zpracuje soubory do .psd fází"
+        disabled>Zpracovat fáze do .psd</button>
+    </div>
+    <div class="tab-content" id="phase-repair">
+      <button id="fix-broken-holes" class="topcoat-button" rel='tooltip' title="Opraví špatné díry">Oprav špatné
+        díry</button>
+      <button id="fix-broken-line" class="topcoat-button" rel='tooltip' title="Opraví špatnou linku">Zahaj opravu špatné
+        linky</button>
+    </div>
+    <div class="tab-content" id="settings">
+      <button id="restartExt" class="topcoat-button" rel='tooltip' title="Restartuje rozšíření">Restart
+        Phaser</button>
+    </div>
   </div>
+
 
   <script src="js/libs/CSInterface-4.0.0.js"></script>
   <script src="js/libs/jquery-2.0.2.min.js"></script>
