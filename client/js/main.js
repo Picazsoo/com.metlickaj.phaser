@@ -51,7 +51,7 @@ function addFiles(returnJSONobj) {
         let filePath = decodeURI(file.path);
         $listOfFiles.append(`<option value="${filePath}">${filePath}</option>`);
     });
-    if(files.length) {
+    if (files.length) {
         $("#process-tiffs").attr("disabled", false);
     }
 }
@@ -60,7 +60,7 @@ function filterForValidTifs(files) {
     return files.filter(file => {
         let fileNameUpperCase = file.fileName.toUpperCase();
         //this should cover both .TIFF and .TIF
-        console.log(fileNameUpperCase + " : " + fileNameUpperCase.indexOf(".TIF"));
+        //console.log(fileNameUpperCase + " : " + fileNameUpperCase.indexOf(".TIF"));
         return fileNameUpperCase.indexOf(".TIF") != -1
     });
 }
@@ -73,25 +73,37 @@ function processTiffsToPSDs() {
     }
 
     let filePaths = [];
-    $listOfFiles.find("option").each( function() {
+    $listOfFiles.find("option").each(function () {
         //extract filepath from each option element
         filePaths.push($(this).attr("value"));
     });
-    console.log(filePaths);
+    //console.log(filePaths);
     jsx.evalScript('batchProcessTiffsToPSDs(' + JSON.stringify(transformSettings) + ',' + JSON.stringify(filePaths) + ')', clearFiles);
 }
 
 
-function fixWellDefinedHoles() {
+function fixBrokenHoles() {
     let marquees = defaultMarquees;
     let transformSettings = {
         "marquees": marquees,
         "idealPointsCenters": idealPointsCenters
     }
-    jsx.evalScript('fixWellDefinedHoles(' + JSON.stringify(transformSettings) + ')');
+    jsx.evalScript('fixBrokenHoles(' + JSON.stringify(transformSettings) + ')');
 }
 
-function clearFiles() {
+function clearFiles(returnJSONobj) {
+    //console.log(returnJSONobj);
+    let transforms = JSON.parse(returnJSONobj);
+    var myNew = [];
+    transforms.forEach((transform) => {
+        myNew.push({
+            left_width: transform.left.width,
+            left_height: transform.left.height,
+            right_width: transform.right.width,
+            right_height: transform.right.height
+        });
+    });
+    console.log(JSON.stringify(myNew));
     $listOfFiles.empty();
     $("#process-tiffs").attr("disabled", true);
 }
