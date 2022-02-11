@@ -20,10 +20,13 @@ $("#restartExt").on("click", function() {
     }
 });
 
-$("#load-files-bridge").on("click" , () => jsx.evalScript("loadFiles('bridge')", addFiles));
-$("#load-files-explorer").on("click" , () => jsx.evalScript("loadFiles('explorer')", addFiles));
+$("#load-tiff-files-bridge").on("click" , () => jsx.evalScript("loadFiles('bridge')", (returnJSONobj) => addFiles(returnJSONobj, /\.(TIF|TIFF|tif|tiff)$/)));
+$("#load-tiff-files-explorer").on("click" , () => jsx.evalScript("loadFiles('explorer')", (returnJSONobj) => addFiles(returnJSONobj, /\.(TIF|TIFF|tif|tiff)$/)));
+$("#load-psd-files-bridge").on("click" , () => jsx.evalScript("loadFiles('bridge')", (returnJSONobj) => addFiles(returnJSONobj, /\.(PSD|psd|)$/)));
+$("#load-psd-files-explorer").on("click" , () => jsx.evalScript("loadFiles('explorer')", (returnJSONobj) => addFiles(returnJSONobj, /\.(PSD|psd|)$/)));
 $("#clear-cache").on("click", () => clearCache());
 $("#process-tiffs").on("click", () => processTiffsToPSDs());
+$("#process-psds").on("click", () => processPSDsToImageJPNGs());
 $("#fix-broken-holes").on("click", () => fixBrokenHoles());
 
 function openTab(event, idName) {

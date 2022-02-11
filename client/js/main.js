@@ -41,11 +41,11 @@ themeManager.init();
 //node.js imports
 const fs = require('fs');
 
-function addFiles(returnJSONobj) {
+function addFiles(returnJSONobj, fileTypeRegex) {
     //console.log(returnJSONobj);
     let files = JSON.parse(returnJSONobj);
     $listOfFiles.empty();
-    files = filterForValidTifs(files);
+    files = filterForValidFileType(files, fileTypeRegex);
     files.sort();
     files.forEach(file => {
         let filePath = decodeURI(file.path);
@@ -53,15 +53,17 @@ function addFiles(returnJSONobj) {
     });
     if (files.length) {
         $("#process-tiffs").attr("disabled", false);
+        $("#process-psds").attr("disabled", false);
     }
 }
 
-function filterForValidTifs(files) {
+function filterForValidFileType(files, fileTypeRegex) {
     return files.filter(file => {
+        /.*/[Symbol.match]
         let fileNameUpperCase = file.fileName.toUpperCase();
         //this should cover both .TIFF and .TIF
         //console.log(fileNameUpperCase + " : " + fileNameUpperCase.indexOf(".TIF"));
-        return fileNameUpperCase.indexOf(".TIF") != -1
+        return fileTypeRegex.test(fileNameUpperCase);
     });
 }
 
@@ -79,6 +81,16 @@ function processTiffsToPSDs() {
     });
     //console.log(filePaths);
     jsx.evalScript('batchProcessTiffsToPSDs(' + JSON.stringify(transformSettings) + ',' + JSON.stringify(filePaths) + ')', clearFiles);
+}
+
+function processPSDsToImageJPNGs() {
+    let filePaths = [];
+    $listOfFiles.find("option").each(function () {
+        //extract filepath from each option element
+        filePaths.push($(this).attr("value"));
+    });
+    //console.log(filePaths);
+    jsx.evalScript(`batchProcessPsdToImageJPng(${JSON.stringify(filePaths)})`, clearFiles);
 }
 
 
@@ -106,4 +118,5 @@ function clearFiles(returnJSONobj) {
     console.log(JSON.stringify(myNew));
     $listOfFiles.empty();
     $("#process-tiffs").attr("disabled", true);
+    $("#process-psds").attr("disabled", true);
 }

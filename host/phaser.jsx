@@ -1,11 +1,15 @@
 ﻿//@include "../../common_library/photoshop_library.jsx"
 
-var saveOptions = new PhotoshopSaveOptions;
-saveOptions.alphaChannels = true;
-saveOptions.annotations = true;
-saveOptions.embedColorProfile = true;
-saveOptions.layers = true;
-saveOptions.spotColors = true;
+var photoshopSaveOptions = new PhotoshopSaveOptions;
+photoshopSaveOptions.alphaChannels = true;
+photoshopSaveOptions.annotations = true;
+photoshopSaveOptions.embedColorProfile = true;
+photoshopSaveOptions.layers = true;
+photoshopSaveOptions.spotColors = true;
+
+var pngSaveOptions = new PNGSaveOptions;
+pngSaveOptions.compression = 0;
+pngSaveOptions.interlaced = false;
 
 //Layer names used in project
 var lr = {
@@ -104,14 +108,14 @@ function batchProcessTiffsToPSDs(transformSettings, filePaths) {
         filePaths.forEach(function (filePath) {
             var docRef = open(File(filePath));
             var docRefPath = app.activeDocument.fullName.toString();
-            processTIFsToStraightenedPSDs(transformSettings);
+            processTIFtoStraightenedPSD(transformSettings);
             var docRefPathPSD = docRefPath.substring(0, docRefPath.lastIndexOf(".")) + ".psd";
-            docRef.saveAs(new File(docRefPathPSD), saveOptions);
+            docRef.saveAs(new File(docRefPathPSD), photoshopSaveOptions);
             docRef.close(SaveOptions.DONOTSAVECHANGES);
         });
         showPalettes();
     } catch (error) {
-        alert(error);
+        alert(error.line.toString() + "\r" + error.toString())
         showPalettes();
     }
 
@@ -174,12 +178,12 @@ function fixBrokenHoles(transformSettings) {
         selectLayers(lr.BARVA);
         showPalettes();
     } catch (error) {
-        alert(error);
+        alert(error.line.toString() + "\r" + error.toString())
         showPalettes();
     }
 }
 
-function processTIFsToStraightenedPSDs(transformSettings) {
+function processTIFtoStraightenedPSD(transformSettings) {
     //app.activeDocument.layerComps.removeAll();
     //rotate if is in portrait mode
     clockwiseToLandscape();
@@ -357,6 +361,28 @@ function processTIFsToStraightenedPSDs(transformSettings) {
     transformInformation.rotationPointCoords = scannedPoints.left;
     transformInformation.idealPoints = idealPoints;
     app.activeDocument.info.keywords = [JSON.lave(transformInformation)];
+}
+
+function batchProcessPsdToImageJPng(filePaths) {
+    try {
+        hidePalettes();
+        filePaths.forEach(function (filePath) {
+            var docRef = open(File(filePath));
+            var docRefPath = app.activeDocument.fullName.toString();
+            processPSDtoImageJPNG();
+            var docRefPathPNG = docRefPath.substring(0, docRefPath.lastIndexOf(".")) + "despec" + ".png";
+            docRef.saveAs(new File(docRefPathPNG), pngSaveOptions, true, Extension.LOWERCASE);
+            docRef.close(SaveOptions.DONOTSAVECHANGES);
+        });
+        showPalettes();
+    } catch (error) {
+        alert(error.line.toString() + "\r" + error.toString())
+        showPalettes();
+    }
+}
+
+function processPSDtoImageJPNG() {
+    applyLayerComp(lc.JACHYM_IMAGEJ.name);
 }
 
 function getCenterFromSelection(selectionBounds) {

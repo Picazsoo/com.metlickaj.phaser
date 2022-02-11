@@ -15,23 +15,34 @@
   <div id="container">
     <div class="topcoat-button-bar">
       <div class="topcoat-button-bar__item">
+        <button class="topcoat-button-bar__button" onclick="openTab(event, 'phase-load')">Načtení souborů</button>
+      </div>
+      <div class="topcoat-button-bar__item">
         <button class="topcoat-button-bar__button" onclick="openTab(event, 'phase-prepare')">Příprava fází</button>
       </div>
       <div class="topcoat-button-bar__item">
-        <button class="topcoat-button-bar__button" onclick="openTab(event, 'phase-repair')">Oprava fází</button>
+        <button class="topcoat-button-bar__button" onclick="openTab(event, 'phase-repair')">Úprava fází</button>
       </div>
       <div class="topcoat-button-bar__item">
         <button class="topcoat-button-bar__button" onclick="openTab(event, 'settings')">Nastavení</button>
       </div>
     </div>
-    <div class="tab-content" id="phase-prepare">
+    <div class="tab-content" id="phase-load">
       <select id="files-for-processing" multiple size="5"></select>
-      <button id="load-files-bridge" class="topcoat-button" rel='tooltip'
-        title="Načte soubory označené v Adobe Bridge">Načíst z Bridge</button>
-      <button id="load-files-explorer" class="topcoat-button" rel='tooltip'
-        title="Otevře Průzkumník pro výběr souborů">Načíst z Průzkumníku</button>
+      <button id="load-tiff-files-bridge" class="topcoat-button" rel='tooltip'
+              title="Načte .tiff soubory označené v Adobe Bridge">Načíst .tiff z Bridge</button>
+      <button id="load-tiff-files-explorer" class="topcoat-button" rel='tooltip'
+              title="Otevře Průzkumník pro výběr .tiff souborů">Načíst .tiff z Průzkumníku</button>
+      <button id="load-psd-files-bridge" class="topcoat-button" rel='tooltip'
+              title="Načte .psd soubory označené v Adobe Bridge">Načíst .psd z Bridge</button>
+      <button id="load-psd-files-explorer" class="topcoat-button" rel='tooltip'
+              title="Otevře Průzkumník pro výběr .psd souborů">Načíst .psd z Průzkumníku</button>
+    </div>
+    <div class="tab-content" id="phase-prepare">
       <button id="process-tiffs" class="topcoat-button" rel='tooltip' title="Zpracuje soubory do .psd fází"
         disabled>Zpracovat fáze do .psd</button>
+      <button id="process-psds" class="topcoat-button" rel='tooltip' title="Zpracuje .psd soubory do .png pro ImageJ"
+        disabled>Zpracovat .psd fáze do .png</button>
     </div>
     <div class="tab-content" id="phase-repair">
       <button id="fix-broken-holes" class="topcoat-button" rel='tooltip' title="Opraví špatné díry">Oprav špatné
