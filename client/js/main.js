@@ -99,6 +99,18 @@ function processPSDsToImageJPNGs() {
     jsx.evalScript(`batchProcessPsdToImageJPng(${JSON.stringify(filePaths)})`, () => processDespecklePNGs(filePaths));
 }
 
+function despecklePSDsWithImageJPNGs() {
+    let filePaths = [];
+    $listOfFiles.find("option").each(function () {
+        //extract filepath from each option element
+        filePaths.push($(this).attr("value"));
+    });
+    currentWorkingFolder = filePaths[0].substring(0, filePaths[0].lastIndexOf("\\"));
+    //console.log(filePaths);
+    jsx.evalScript(`batchApplyPngMaskToPsd(${JSON.stringify(filePaths)})`);
+}
+
+
 function processDespecklePNGs(filePaths) {
     let exec = require('child_process').execSync;
     let pathToMacro = extensionRootPath + "/" + "imagej_despeckle.ijm";
@@ -111,7 +123,7 @@ function processDespecklePNGs(filePaths) {
             console.log(stderr);
         });
     currentWorkingFolder = undefined;
-    clearFiles();
+    // clearFiles();
 }
 
 function pathToWinFormat(forwardSlashPath) {

@@ -46,7 +46,7 @@ var lc = {
     PAVEL_STINOVANI: { name: "pavel-stinovani", desc: "pro shadower" },
     STINOVANA_FAZE: { name: "stinovana-faze", desc: "aktualne stinovana faze" },
     JACHYM_FINAL: { name: "jachym-final", desc: "pro after effects!" },
-    JACHYM_DESPECLE: { name: "jachym-despecle", desc: "pro despeckle!" },
+    JACHYM_DESPECKLE: { name: "jachym-despecle", desc: "pro despeckle!" },
     JACHYM_IMAGEJ: { name: "jachym-imagej", desc: "pro imageJ!" }
 }
 
@@ -343,7 +343,7 @@ function processTIFtoStraightenedPSD(transformSettings) {
     createLayerComp(lc.JACHYM_FINAL);
     createOutlineForDespecle(color.RED, lr.VRSTVY);
     setVisibilityByLayersName(false, [lr.SVETLO, lr.STIN]);
-    createLayerComp(lc.JACHYM_DESPECLE);
+    createLayerComp(lc.JACHYM_DESPECKLE);
     setVisibilityByLayersName(true, [lr.SVETLO, lr.STIN]);
     hideOutlineForDespecle(lr.VRSTVY);
     setVisibilityByLayersName(false, [lr.SVETLO, lr.STIN]);
@@ -381,8 +381,43 @@ function batchProcessPsdToImageJPng(filePaths) {
     }
 }
 
+function batchApplyPngMaskToPsd(filePaths) {
+    try {
+        hidePalettes();
+        filePaths.forEach(function (filePath) {
+            var docRef = open(File(filePath));
+            var docRefPath = app.activeDocument.fullName.toString();
+            var docRefPathPNG = docRefPath.substring(0, docRefPath.lastIndexOf(".")) + "despec" + ".png";
+            applyPngMaskToPsd(docRefPathPNG);
+            docRef.close(SaveOptions.SAVECHANGES);
+            File(docRefPathPNG).remove(); // removes the png used for mask
+        });
+        selectEraser();
+        showPalettes();
+    } catch (error) {
+        alert(error.line.toString() + "\r" + error.toString())
+        showPalettes();
+    }
+}
+
 function processPSDtoImageJPNG() {
     applyLayerComp(lc.JACHYM_IMAGEJ.name);
+}
+
+function applyPngMaskToPsd(pngMaskPath) {
+    selectLayers(lr.LINKA);
+    modifyLayersLock(false);
+    var maskRef = open(File(pngMaskPath));
+    selectAllPixels();
+    copySelection();
+    maskRef.close(SaveOptions.DONOTSAVECHANGES);
+    makeEmptyMask();
+    selectCurrentChannelAsVisible(true);
+    pasteInPlace();
+    selectCurrentChannelAsVisible(false);
+    SelectRGBChannels();
+    deselectMarque();
+    applyLayerComp(lc.JACHYM_DESPECKLE.name);
 }
 
 function getCenterFromSelection(selectionBounds) {

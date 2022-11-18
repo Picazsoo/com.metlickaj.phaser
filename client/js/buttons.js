@@ -27,7 +27,7 @@ $("#load-psd-files-explorer").on("click" , () => jsx.evalScript("loadFiles('expl
 $("#clear-cache").on("click", () => clearCache());
 $("#process-tiffs").on("click", () => processTiffsToPSDs());
 $("#process-psds").on("click", () => processPSDsToImageJPNGs());
-$("#despeckle-from-png").on("click", () => despeckePSDsWithImageJPNGs());
+$("#despeckle-from-png").on("click", () => despecklePSDsWithImageJPNGs());
 $("#fix-broken-holes").on("click", () => fixBrokenHoles());
 
 function openTab(event, idName) {
