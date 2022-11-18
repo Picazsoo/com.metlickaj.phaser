@@ -31,6 +31,7 @@ $("#despeckle-from-png").on("click", () => despecklePSDsWithImageJPNGs());
 $("#switch-to-layer-comp").on("click", () => switchToLayerComp());
 $("#fix-broken-holes").on("click", () => fixBrokenHoles());
 $("#layer-comps-names").on("click", () => jsx.evalScript(`getLc()`, (lCJsonObj) => populateDropDown(lCJsonObj)));
+$("#clear-files").on("click", clearFiles);
 
 function openTab(event, idName) {
     $(".tab-content").css('visibility', 'hidden');
