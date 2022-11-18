@@ -50,6 +50,10 @@ var lc = {
     JACHYM_IMAGEJ: { name: "jachym-imagej", desc: "pro imageJ!" }
 }
 
+function getLc() {
+    return JSON.lave(lc);
+}
+
 //Color ranges settings for color range method
 var rn = {
     LINKA: {
@@ -400,6 +404,21 @@ function batchApplyPngMaskToPsd(filePaths) {
     }
 }
 
+function batchApplyLayerCompToPsds(filePathsAndLayerComp) {
+    try {
+        hidePalettes();
+        filePathsAndLayerComp.filePaths.forEach(function (filePath) {
+            var docRef = open(File(filePath));
+            applyLayerComp(filePathsAndLayerComp.layerCompName);
+            docRef.close(SaveOptions.SAVECHANGES);
+        });
+        showPalettes();
+    } catch (error) {
+        alert(error.line.toString() + "\r" + error.toString())
+        showPalettes();
+    }
+}
+
 function processPSDtoImageJPNG() {
     applyLayerComp(lc.JACHYM_IMAGEJ.name);
 }
@@ -419,6 +438,8 @@ function applyPngMaskToPsd(pngMaskPath) {
     deselectMarque();
     applyLayerComp(lc.JACHYM_DESPECKLE.name);
 }
+
+
 
 function getCenterFromSelection(selectionBounds) {
     var width = selectionBounds[2] - selectionBounds[0];

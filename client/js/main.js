@@ -6,6 +6,7 @@ const extensionRootPath = csInterface.getSystemPath(SystemPath.EXTENSION);
 
 
 const $listOfFiles = $("#files-for-processing");
+const $layerCompsNamesDropdown = $("#layer-comps-names");
 let currentWorkingFolder;
 
 //idealni stredy der
@@ -59,6 +60,8 @@ function addFiles(returnJSONobj, fileTypeRegex) {
     if (files.length) {
         $("#process-tiffs").attr("disabled", false);
         $("#process-psds").attr("disabled", false);
+        $("#despeckle-from-png").attr("disabled", false);
+        $("#switch-to-layer-comp").attr("disabled", false);
     }
 }
 
@@ -72,6 +75,15 @@ function filterForValidFileType(files, fileTypeRegex) {
     });
 }
 
+function returnFilePaths() {
+    let filePaths = [];
+    $listOfFiles.find("option").each(function () {
+        //extract filepath from each option element
+        filePaths.push($(this).attr("value"));
+    });
+    return filePaths;
+}
+
 function processTiffsToPSDs() {
     let marquees = defaultMarquees;
     let transformSettings = {
@@ -79,35 +91,39 @@ function processTiffsToPSDs() {
         "idealPointsCenters": idealPointsCenters
     }
 
-    let filePaths = [];
-    $listOfFiles.find("option").each(function () {
-        //extract filepath from each option element
-        filePaths.push($(this).attr("value"));
-    });
-    //console.log(filePaths);
-    jsx.evalScript('batchProcessTiffsToPSDs(' + JSON.stringify(transformSettings) + ',' + JSON.stringify(filePaths) + ')', clearFiles);
+    jsx.evalScript('batchProcessTiffsToPSDs(' + JSON.stringify(transformSettings) + ',' + JSON.stringify(returnFilePaths()) + ')', clearFiles);
 }
 
 function processPSDsToImageJPNGs() {
-    let filePaths = [];
-    $listOfFiles.find("option").each(function () {
-        //extract filepath from each option element
-        filePaths.push($(this).attr("value"));
-    });
+    let filePaths = returnFilePaths();
     currentWorkingFolder = filePaths[0].substring(0, filePaths[0].lastIndexOf("\\"));
     //console.log(filePaths);
     jsx.evalScript(`batchProcessPsdToImageJPng(${JSON.stringify(filePaths)})`, () => processDespecklePNGs(filePaths));
 }
 
 function despecklePSDsWithImageJPNGs() {
-    let filePaths = [];
-    $listOfFiles.find("option").each(function () {
-        //extract filepath from each option element
-        filePaths.push($(this).attr("value"));
-    });
+    let filePaths = returnFilePaths();
     currentWorkingFolder = filePaths[0].substring(0, filePaths[0].lastIndexOf("\\"));
     //console.log(filePaths);
     jsx.evalScript(`batchApplyPngMaskToPsd(${JSON.stringify(filePaths)})`);
+}
+
+function switchToLayerComp() {
+    let filePaths = returnFilePaths();
+    let selectedLayerComp = $layerCompsNamesDropdown.val();
+    jsx.evalScript(`batchApplyLayerCompToPsds(${JSON.stringify({filePaths: filePaths, layerCompName: selectedLayerComp})})`);
+}
+
+function populateDropDown(lCJsonObj) {
+    if($layerCompsNamesDropdown.children().length !== 0) {
+        return;
+    }
+    let obj = JSON.parse(lCJsonObj)
+    Object.keys(obj).forEach((key) => {
+        $layerCompsNamesDropdown.append(
+                $('<option></option>').val(obj[key].name).html(obj[key].name)
+        )
+    })
 }
 
 
@@ -144,4 +160,6 @@ function clearFiles() {
     $listOfFiles.empty();
     $("#process-tiffs").attr("disabled", true);
     $("#process-psds").attr("disabled", true);
+    $("#despeckle-from-png").attr("disabled", true);
+    $("#switch-to-layer-comp").attr("disabled", true);
 }

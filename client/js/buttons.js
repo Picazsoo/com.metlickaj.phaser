@@ -28,7 +28,9 @@ $("#clear-cache").on("click", () => clearCache());
 $("#process-tiffs").on("click", () => processTiffsToPSDs());
 $("#process-psds").on("click", () => processPSDsToImageJPNGs());
 $("#despeckle-from-png").on("click", () => despecklePSDsWithImageJPNGs());
+$("#switch-to-layer-comp").on("click", () => switchToLayerComp());
 $("#fix-broken-holes").on("click", () => fixBrokenHoles());
+$("#layer-comps-names").on("click", () => jsx.evalScript(`getLc()`, (lCJsonObj) => populateDropDown(lCJsonObj)));
 
 function openTab(event, idName) {
     $(".tab-content").css('visibility', 'hidden');
