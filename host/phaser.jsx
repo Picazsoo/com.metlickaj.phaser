@@ -93,7 +93,7 @@ function loadFiles(source) {
     }
     var filesWithPaths = [];
     files.forEach(function (file) {
-        var filePath = file.toString();
+        var filePath = file.fsName.toString();
         filesWithPaths.push({
             fileName: filePath.substring(filePath.lastIndexOf("/") + 1),
             path: filePath

@@ -1,7 +1,12 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50 */
 /*global $, window, location, CSInterface, SystemPath, themeManager*/
 
+const csInterface = new CSInterface();
+const extensionRootPath = csInterface.getSystemPath(SystemPath.EXTENSION);
+
+
 const $listOfFiles = $("#files-for-processing");
+let currentWorkingFolder;
 
 //idealni stredy der
 let idealPointsCenters = {
@@ -89,10 +94,30 @@ function processPSDsToImageJPNGs() {
         //extract filepath from each option element
         filePaths.push($(this).attr("value"));
     });
+    currentWorkingFolder = filePaths[0].substring(0, filePaths[0].lastIndexOf("\\"));
     //console.log(filePaths);
-    jsx.evalScript(`batchProcessPsdToImageJPng(${JSON.stringify(filePaths)})`, clearFiles);
+    jsx.evalScript(`batchProcessPsdToImageJPng(${JSON.stringify(filePaths)})`, () => processDespecklePNGs(filePaths));
 }
 
+function processDespecklePNGs(filePaths) {
+    let exec = require('child_process').execSync;
+    let pathToMacro = extensionRootPath + "/" + "imagej_despeckle.ijm";
+    let commandToExec = `imagej -macro "${pathToWinFormat(pathToMacro)}" "${pathToWinFormat(currentWorkingFolder)}"`;
+    console.log(commandToExec);
+    exec(commandToExec,
+        (error, stdout, stderr) => {
+            console.log(error);
+            console.log(stdout);
+            console.log(stderr);
+        });
+    currentWorkingFolder = undefined;
+    clearFiles();
+}
+
+function pathToWinFormat(forwardSlashPath) {
+    let newPath = forwardSlashPath.replace(/\//g, "\\");
+    return newPath;
+}
 
 function fixBrokenHoles() {
     let marquees = defaultMarquees;
@@ -103,19 +128,7 @@ function fixBrokenHoles() {
     jsx.evalScript('fixBrokenHoles(' + JSON.stringify(transformSettings) + ')');
 }
 
-function clearFiles(returnJSONobj) {
-    //console.log(returnJSONobj);
-    let transforms = JSON.parse(returnJSONobj);
-    var myNew = [];
-    transforms.forEach((transform) => {
-        myNew.push({
-            left_width: transform.left.width,
-            left_height: transform.left.height,
-            right_width: transform.right.width,
-            right_height: transform.right.height
-        });
-    });
-    console.log(JSON.stringify(myNew));
+function clearFiles() {
     $listOfFiles.empty();
     $("#process-tiffs").attr("disabled", true);
     $("#process-psds").attr("disabled", true);
