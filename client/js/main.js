@@ -121,7 +121,7 @@ function populateDropDown(lCJsonObj) {
     let obj = JSON.parse(lCJsonObj)
     Object.keys(obj).forEach((key) => {
         $layerCompsNamesDropdown.append(
-                $('<option></option>').val(obj[key].name).html(obj[key].name)
+                $('<option></option disabled>').val(obj[key].name).html(obj[key].name)
         )
     })
 }
