@@ -24,6 +24,9 @@
         <button class="topcoat-button-bar__button" onclick="openTab(event, 'phase-repair')">Úprava fází</button>
       </div>
       <div class="topcoat-button-bar__item">
+        <button class="topcoat-button-bar__button" onclick="openTab(event, 'fahrplan-slice')">Fahrplany</button>
+      </div>
+      <div class="topcoat-button-bar__item">
         <button class="topcoat-button-bar__button" onclick="openTab(event, 'settings')">Nastavení</button>
       </div>
     </div>
@@ -37,12 +40,16 @@
               title="Načte .psd soubory označené v Adobe Bridge">Načíst .psd z Bridge</button>
       <button id="load-psd-files-explorer" class="topcoat-button" rel='tooltip'
               title="Otevře Průzkumník pro výběr .psd souborů">Načíst .psd z Průzkumníku</button>
+      <button id="load-pdf-files-explorer" class="topcoat-button" rel='tooltip'
+              title="Otevře Průzkumník pro výběr .pdf souborů">Načíst .pdf z Průzkumníku</button>
       <button id="clear-files" class="topcoat-button" rel='tooltip'
               title="Odstraní položky ze seznamu">Odstranit soubory</button>
     </div>
     <div class="tab-content" id="phase-prepare">
       <button id="process-tiffs" class="topcoat-button" rel='tooltip' title="Zpracuje soubory do .psd fází"
         disabled>Zpracovat fáze do .psd</button>
+      <button id="transform-background" class="topcoat-button" rel='tooltip' title="Posune a otočí background podle keyword metadat"
+              disabled>Transformuj Background podle keyword metadat</button>
       <button id="process-psds" class="topcoat-button" rel='tooltip' title="Zpracuje .psd soubory do .png pro ImageJ"
         disabled>Zpracovat .psd fáze do .png</button>
       <button id="despeckle-from-png" class="topcoat-button" rel='tooltip' title="Despeckle pomocí png" disabled>Despeckle pomocí png</button>
@@ -55,6 +62,9 @@
         díry</button>
       <button id="fix-broken-line" class="topcoat-button" rel='tooltip' title="Opraví špatnou linku">Zahaj opravu špatné
         linky</button>
+    </div>
+    <div class="tab-content" id="fahrplan-slice">
+      <button id="process-fahrplan" class="topcoat-button" rel='tooltip' title="process fahrplan">process fahrplan</button>
     </div>
     <div class="tab-content" id="settings">
       <button id="restartExt" class="topcoat-button" rel='tooltip' title="Restartuje rozšíření">Restart

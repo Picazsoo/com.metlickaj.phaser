@@ -24,12 +24,15 @@ $("#load-tiff-files-bridge").on("click" , () => jsx.evalScript("loadFiles('bridg
 $("#load-tiff-files-explorer").on("click" , () => jsx.evalScript("loadFiles('explorer')", (returnJSONobj) => addFiles(returnJSONobj, /\.(TIF|TIFF|tif|tiff)$/)));
 $("#load-psd-files-bridge").on("click" , () => jsx.evalScript("loadFiles('bridge')", (returnJSONobj) => addFiles(returnJSONobj, /\.(PSD|psd|)$/)));
 $("#load-psd-files-explorer").on("click" , () => jsx.evalScript("loadFiles('explorer')", (returnJSONobj) => addFiles(returnJSONobj, /\.(PSD|psd|)$/)));
+$("#load-pdf-files-explorer").on("click" , () => jsx.evalScript("loadFiles('explorer')", (returnJSONobj) => addFiles(returnJSONobj, /\.(PDF|pdf|)$/)));
 $("#clear-cache").on("click", () => clearCache());
 $("#process-tiffs").on("click", () => processTiffsToPSDs());
+$("#transform-background").on("click", () => transformBackgrounds());
 $("#process-psds").on("click", () => processPSDsToImageJPNGs());
 $("#despeckle-from-png").on("click", () => despecklePSDsWithImageJPNGs());
 $("#switch-to-layer-comp").on("click", () => switchToLayerComp());
 $("#fix-broken-holes").on("click", () => fixBrokenHoles());
+$("#process-fahrplan").on("click", () => processFahrplans());
 $("#layer-comps-names").on("click", () => jsx.evalScript(`getLc()`, (lCJsonObj) => populateDropDown(lCJsonObj)));
 $("#clear-files").on("click", clearFiles);
 

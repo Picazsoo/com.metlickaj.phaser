@@ -59,6 +59,7 @@ function addFiles(returnJSONobj, fileTypeRegex) {
     });
     if (files.length) {
         $("#process-tiffs").attr("disabled", false);
+        $("#transform-background").attr("disabled", false);
         $("#process-psds").attr("disabled", false);
         $("#despeckle-from-png").attr("disabled", false);
         $("#switch-to-layer-comp").attr("disabled", false);
@@ -93,6 +94,11 @@ function processTiffsToPSDs() {
 
     jsx.evalScript('batchProcessTiffsToPSDs(' + JSON.stringify(transformSettings) + ',' + JSON.stringify(returnFilePaths()) + ')', clearFiles);
 }
+
+function transformBackgrounds() {
+    jsx.evalScript('transformBackgrounds(' + JSON.stringify(returnFilePaths()) + ')', clearFiles);
+}
+
 
 function processPSDsToImageJPNGs() {
     let filePaths = returnFilePaths();
@@ -156,9 +162,20 @@ function fixBrokenHoles() {
     jsx.evalScript('fixBrokenHoles(' + JSON.stringify(transformSettings) + ')');
 }
 
+function processFahrplans() {
+    let marquees = defaultMarquees;
+    let transformSettings = {
+        "marquees": marquees,
+        "idealPointsCenters": idealPointsCenters
+    }
+
+    jsx.evalScript('processFahrplans(' + JSON.stringify(transformSettings) + ',' + JSON.stringify(returnFilePaths()) + ')', clearFiles);
+}
+
 function clearFiles() {
     $listOfFiles.empty();
     $("#process-tiffs").attr("disabled", true);
+    $("#transform-background").attr("disabled", true);
     $("#process-psds").attr("disabled", true);
     $("#despeckle-from-png").attr("disabled", true);
     $("#switch-to-layer-comp").attr("disabled", true);
